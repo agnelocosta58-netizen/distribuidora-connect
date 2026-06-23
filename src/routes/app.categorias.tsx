@@ -30,7 +30,7 @@ function CategoriasPage() {
 
   async function del(table: string, id: string, key: string) {
     if (!confirm("Excluir?")) return;
-    const { error } = await supabase.from(table).delete().eq("id", id);
+    const { error } = await (supabase.from as any)(table).delete().eq("id", id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: [key] });
   }
