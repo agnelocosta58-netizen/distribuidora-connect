@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppProdutosRouteImport } from './routes/app.produtos'
 import { Route as AppPdvRouteImport } from './routes/app.pdv'
+import { Route as AppFinanceiroRouteImport } from './routes/app.financeiro'
 import { Route as AppClientesRouteImport } from './routes/app.clientes'
 import { Route as AppCategoriasRouteImport } from './routes/app.categorias'
 import { Route as AppCaixaRouteImport } from './routes/app.caixa'
@@ -55,6 +56,11 @@ const AppPdvRoute = AppPdvRouteImport.update({
   path: '/pdv',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFinanceiroRoute = AppFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppClientesRoute = AppClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/app/caixa': typeof AppCaixaRoute
   '/app/categorias': typeof AppCategoriasRoute
   '/app/clientes': typeof AppClientesRoute
+  '/app/financeiro': typeof AppFinanceiroRoute
   '/app/pdv': typeof AppPdvRoute
   '/app/produtos': typeof AppProdutosRoute
   '/app/': typeof AppIndexRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/app/caixa': typeof AppCaixaRoute
   '/app/categorias': typeof AppCategoriasRoute
   '/app/clientes': typeof AppClientesRoute
+  '/app/financeiro': typeof AppFinanceiroRoute
   '/app/pdv': typeof AppPdvRoute
   '/app/produtos': typeof AppProdutosRoute
   '/app': typeof AppIndexRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/app/caixa': typeof AppCaixaRoute
   '/app/categorias': typeof AppCategoriasRoute
   '/app/clientes': typeof AppClientesRoute
+  '/app/financeiro': typeof AppFinanceiroRoute
   '/app/pdv': typeof AppPdvRoute
   '/app/produtos': typeof AppProdutosRoute
   '/app/': typeof AppIndexRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/app/caixa'
     | '/app/categorias'
     | '/app/clientes'
+    | '/app/financeiro'
     | '/app/pdv'
     | '/app/produtos'
     | '/app/'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/app/caixa'
     | '/app/categorias'
     | '/app/clientes'
+    | '/app/financeiro'
     | '/app/pdv'
     | '/app/produtos'
     | '/app'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/app/caixa'
     | '/app/categorias'
     | '/app/clientes'
+    | '/app/financeiro'
     | '/app/pdv'
     | '/app/produtos'
     | '/app/'
@@ -203,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPdvRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/financeiro': {
+      id: '/app/financeiro'
+      path: '/financeiro'
+      fullPath: '/app/financeiro'
+      preLoaderRoute: typeof AppFinanceiroRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/clientes': {
       id: '/app/clientes'
       path: '/clientes'
@@ -231,6 +250,7 @@ interface AppRouteChildren {
   AppCaixaRoute: typeof AppCaixaRoute
   AppCategoriasRoute: typeof AppCategoriasRoute
   AppClientesRoute: typeof AppClientesRoute
+  AppFinanceiroRoute: typeof AppFinanceiroRoute
   AppPdvRoute: typeof AppPdvRoute
   AppProdutosRoute: typeof AppProdutosRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -240,6 +260,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCaixaRoute: AppCaixaRoute,
   AppCategoriasRoute: AppCategoriasRoute,
   AppClientesRoute: AppClientesRoute,
+  AppFinanceiroRoute: AppFinanceiroRoute,
   AppPdvRoute: AppPdvRoute,
   AppProdutosRoute: AppProdutosRoute,
   AppIndexRoute: AppIndexRoute,
