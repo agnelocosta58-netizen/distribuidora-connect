@@ -90,11 +90,11 @@ function CategoriasPage() {
 
       <SimpleDialog open={openCat} onClose={() => setOpenCat(false)} title="Nova categoria"
         fields={[{ key: "nome", label: "Nome", required: true }, { key: "cor", label: "Cor (hex)", default: "#64748B" }]}
-        onSubmit={async (v) => { const { error } = await supabase.from("categories").insert({ ...v, company_id: auth.company?.id }); if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["categories"] }); }} />
+        onSubmit={async (v: any) => { const { error } = await supabase.from("categories").insert({ ...v, company_id: auth.company?.id }); if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["categories"] }); }} />
 
       <SimpleDialog open={openBrand} onClose={() => setOpenBrand(false)} title="Nova marca"
         fields={[{ key: "nome", label: "Nome", required: true }]}
-        onSubmit={async (v) => { const { error } = await supabase.from("brands").insert({ ...v, company_id: auth.company?.id }); if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["brands"] }); }} />
+        onSubmit={async (v: any) => { const { error } = await supabase.from("brands").insert({ ...v, company_id: auth.company?.id }); if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["brands"] }); }} />
 
       <SimpleDialog open={openSup} onClose={() => setOpenSup(false)} title="Novo fornecedor"
         fields={[
@@ -102,7 +102,7 @@ function CategoriasPage() {
           { key: "cnpj", label: "CNPJ" }, { key: "telefone", label: "Telefone" },
           { key: "email", label: "E-mail" }, { key: "endereco", label: "Endereço" },
         ]}
-        onSubmit={async (v) => { const { error } = await supabase.from("suppliers").insert({ ...v, company_id: auth.company?.id }); if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["suppliers"] }); }} />
+        onSubmit={async (v: any) => { const { error } = await supabase.from("suppliers").insert({ ...v, company_id: auth.company?.id }); if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["suppliers"] }); }} />
     </PageContainer>
   );
 }
