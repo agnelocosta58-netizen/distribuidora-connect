@@ -15,6 +15,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppProdutosRouteImport } from './routes/app.produtos'
+import { Route as AppPdvRouteImport } from './routes/app.pdv'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -46,12 +47,18 @@ const AppProdutosRoute = AppProdutosRouteImport.update({
   path: '/produtos',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPdvRoute = AppPdvRouteImport.update({
+  id: '/pdv',
+  path: '/pdv',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/app/pdv': typeof AppPdvRoute
   '/app/produtos': typeof AppProdutosRoute
   '/app/': typeof AppIndexRoute
 }
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/app/pdv': typeof AppPdvRoute
   '/app/produtos': typeof AppProdutosRoute
   '/app': typeof AppIndexRoute
 }
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/app/pdv': typeof AppPdvRoute
   '/app/produtos': typeof AppProdutosRoute
   '/app/': typeof AppIndexRoute
 }
@@ -78,16 +87,18 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/reset-password'
+    | '/app/pdv'
     | '/app/produtos'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/reset-password' | '/app/produtos' | '/app'
+  to: '/' | '/auth' | '/reset-password' | '/app/pdv' | '/app/produtos' | '/app'
   id:
     | '__root__'
     | '/'
     | '/app'
     | '/auth'
     | '/reset-password'
+    | '/app/pdv'
     | '/app/produtos'
     | '/app/'
   fileRoutesById: FileRoutesById
@@ -143,15 +154,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProdutosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/pdv': {
+      id: '/app/pdv'
+      path: '/pdv'
+      fullPath: '/app/pdv'
+      preLoaderRoute: typeof AppPdvRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppPdvRoute: typeof AppPdvRoute
   AppProdutosRoute: typeof AppProdutosRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppPdvRoute: AppPdvRoute,
   AppProdutosRoute: AppProdutosRoute,
   AppIndexRoute: AppIndexRoute,
 }
