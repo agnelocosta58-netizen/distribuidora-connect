@@ -18,6 +18,7 @@ import { Route as AppProdutosRouteImport } from './routes/app.produtos'
 import { Route as AppPdvRouteImport } from './routes/app.pdv'
 import { Route as AppClientesRouteImport } from './routes/app.clientes'
 import { Route as AppCategoriasRouteImport } from './routes/app.categorias'
+import { Route as AppCaixaRouteImport } from './routes/app.caixa'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -64,12 +65,18 @@ const AppCategoriasRoute = AppCategoriasRouteImport.update({
   path: '/categorias',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCaixaRoute = AppCaixaRouteImport.update({
+  id: '/caixa',
+  path: '/caixa',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/app/caixa': typeof AppCaixaRoute
   '/app/categorias': typeof AppCategoriasRoute
   '/app/clientes': typeof AppClientesRoute
   '/app/pdv': typeof AppPdvRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/app/caixa': typeof AppCaixaRoute
   '/app/categorias': typeof AppCategoriasRoute
   '/app/clientes': typeof AppClientesRoute
   '/app/pdv': typeof AppPdvRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/app/caixa': typeof AppCaixaRoute
   '/app/categorias': typeof AppCategoriasRoute
   '/app/clientes': typeof AppClientesRoute
   '/app/pdv': typeof AppPdvRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/reset-password'
+    | '/app/caixa'
     | '/app/categorias'
     | '/app/clientes'
     | '/app/pdv'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/app/caixa'
     | '/app/categorias'
     | '/app/clientes'
     | '/app/pdv'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/reset-password'
+    | '/app/caixa'
     | '/app/categorias'
     | '/app/clientes'
     | '/app/pdv'
@@ -205,10 +217,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCategoriasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/caixa': {
+      id: '/app/caixa'
+      path: '/caixa'
+      fullPath: '/app/caixa'
+      preLoaderRoute: typeof AppCaixaRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppCaixaRoute: typeof AppCaixaRoute
   AppCategoriasRoute: typeof AppCategoriasRoute
   AppClientesRoute: typeof AppClientesRoute
   AppPdvRoute: typeof AppPdvRoute
@@ -217,6 +237,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppCaixaRoute: AppCaixaRoute,
   AppCategoriasRoute: AppCategoriasRoute,
   AppClientesRoute: AppClientesRoute,
   AppPdvRoute: AppPdvRoute,

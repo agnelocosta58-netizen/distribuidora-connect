@@ -45,7 +45,7 @@ function CaixaPage() {
 
   async function fechar() {
     if (!confirm(`Fechar caixa com saldo ${brl(saldo)}?`)) return;
-    await supabase.from("cash_movements").insert({ company_id: auth.company?.id, cash_register_id: caixa!.id, tipo: "fechamento", valor: saldo, descricao: "Fechamento", user_id: auth.user?.id });
+    await supabase.from("cash_movements").insert({ company_id: auth.company?.id!, cash_register_id: caixa!.id, tipo: "fechamento", valor: saldo, descricao: "Fechamento", user_id: auth.user?.id });
     await supabase.from("cash_registers").update({ status: "fechado", valor_fechamento: saldo, fechado_em: new Date().toISOString() }).eq("id", caixa!.id);
     toast.success("Caixa fechado");
     qc.invalidateQueries({ queryKey: ["caixa-aberto"] });
