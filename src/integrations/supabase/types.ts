@@ -404,6 +404,116 @@ export type Database = {
           },
         ]
       }
+      pix_keys: {
+        Row: {
+          ativa: boolean
+          banco: string | null
+          chave: string
+          company_id: string
+          created_at: string
+          id: string
+          padrao: boolean
+          tipo: Database["public"]["Enums"]["pix_key_type"]
+          titular: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          banco?: string | null
+          chave: string
+          company_id: string
+          created_at?: string
+          id?: string
+          padrao?: boolean
+          tipo: Database["public"]["Enums"]["pix_key_type"]
+          titular?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          banco?: string | null
+          chave?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          padrao?: boolean
+          tipo?: Database["public"]["Enums"]["pix_key_type"]
+          titular?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pix_keys_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pix_transactions: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          pago_em: string | null
+          pix_key_id: string | null
+          provider: string | null
+          provider_payload: Json | null
+          qr_payload: string | null
+          sale_id: string | null
+          status: Database["public"]["Enums"]["pix_tx_status"]
+          txid: string | null
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          pago_em?: string | null
+          pix_key_id?: string | null
+          provider?: string | null
+          provider_payload?: Json | null
+          qr_payload?: string | null
+          sale_id?: string | null
+          status?: Database["public"]["Enums"]["pix_tx_status"]
+          txid?: string | null
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          pago_em?: string | null
+          pix_key_id?: string | null
+          provider?: string | null
+          provider_payload?: Json | null
+          qr_payload?: string | null
+          sale_id?: string | null
+          status?: Database["public"]["Enums"]["pix_tx_status"]
+          txid?: string | null
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pix_transactions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pix_transactions_pix_key_id_fkey"
+            columns: ["pix_key_id"]
+            isOneToOne: false
+            referencedRelation: "pix_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_variants: {
         Row: {
           ativo: boolean
@@ -659,6 +769,104 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rateio_groups: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          status: Database["public"]["Enums"]["rateio_status"]
+          titulo: string
+          updated_at: string
+          valor_total: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["rateio_status"]
+          titulo: string
+          updated_at?: string
+          valor_total?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["rateio_status"]
+          titulo?: string
+          updated_at?: string
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rateio_groups_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rateio_participants: {
+        Row: {
+          company_id: string
+          created_at: string
+          group_id: string
+          id: string
+          nome: string
+          observacao: string | null
+          pago_em: string | null
+          updated_at: string
+          valor_devido: number
+          valor_pago: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          group_id: string
+          id?: string
+          nome: string
+          observacao?: string | null
+          pago_em?: string | null
+          updated_at?: string
+          valor_devido?: number
+          valor_pago?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          group_id?: string
+          id?: string
+          nome?: string
+          observacao?: string | null
+          pago_em?: string | null
+          updated_at?: string
+          valor_devido?: number
+          valor_pago?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rateio_participants_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rateio_participants_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "rateio_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -1030,6 +1238,9 @@ export type Database = {
         | "fechamento"
       cash_status: "aberto" | "fechado"
       payment_method: "dinheiro" | "pix" | "debito" | "credito" | "fiado"
+      pix_key_type: "cpf" | "cnpj" | "email" | "telefone" | "aleatoria"
+      pix_tx_status: "pendente" | "pago" | "cancelado" | "expirado"
+      rateio_status: "aberto" | "fechado" | "cancelado"
       sale_status: "aberta" | "concluida" | "cancelada"
       stock_move_type: "entrada" | "saida" | "ajuste" | "venda" | "devolucao"
       variant_pack: "unidade" | "fardo" | "caixa"
@@ -1175,6 +1386,9 @@ export const Constants = {
       ],
       cash_status: ["aberto", "fechado"],
       payment_method: ["dinheiro", "pix", "debito", "credito", "fiado"],
+      pix_key_type: ["cpf", "cnpj", "email", "telefone", "aleatoria"],
+      pix_tx_status: ["pendente", "pago", "cancelado", "expirado"],
+      rateio_status: ["aberto", "fechado", "cancelado"],
       sale_status: ["aberta", "concluida", "cancelada"],
       stock_move_type: ["entrada", "saida", "ajuste", "venda", "devolucao"],
       variant_pack: ["unidade", "fardo", "caixa"],
