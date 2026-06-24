@@ -185,6 +185,8 @@ function PdvPage() {
         pixChave={auth.company?.pix_chave ?? null}
         onDone={() => { setCart([]); setDesconto(0); setAcrescimo(0); setShowCheckout(false); setShowCart(false); qc.invalidateQueries({ queryKey: ["products-pdv"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }}
       />
+
+      <BarcodeScanner open={scanOpen} onOpenChange={setScanOpen} onDetected={handleScannedCode} title="Adicionar produto ao carrinho" />
     </div>
   );
 }
