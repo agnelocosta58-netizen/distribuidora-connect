@@ -110,9 +110,9 @@ function VendedoresPage() {
 
       <UserDialog
         open={open}
-        onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}
+        onOpenChange={(o: boolean) => { setOpen(o); if (!o) setEditing(null); }}
         editing={editing}
-        onSubmit={async (form) => {
+        onSubmit={async (form: any) => {
           try {
             if (editing) {
               await updateFn({ data: { userId: editing.id, nome: form.nome, telefone: form.telefone, cpf: form.cpf, role: form.role } });
@@ -130,7 +130,7 @@ function VendedoresPage() {
       <PasswordDialog
         user={pwUser}
         onClose={() => setPwUser(null)}
-        onSubmit={async (senha) => {
+        onSubmit={async (senha: string) => {
           try { await resetPwFn({ data: { userId: pwUser.id, senha } }); toast.success("Senha alterada"); return true; }
           catch (e: any) { toast.error(e.message); return false; }
         }}
