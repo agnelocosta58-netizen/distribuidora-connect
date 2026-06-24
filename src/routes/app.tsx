@@ -2,8 +2,9 @@ import { createFileRoute, Outlet, useNavigate, useRouterState, Link } from "@tan
 import { useEffect } from "react";
 import { useAuth, signOut } from "@/lib/auth";
 import {
-  LayoutDashboard, Package, ShoppingCart, Users, Wallet,
+  LayoutDashboard, Package, ShoppingCart, Users, Wallet, Boxes,
   Settings, LogOut, BarChart3, Tags, UserCog, Beer, Receipt,
+  Sparkles, Image as ImageIcon, Split, QrCode,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,11 +22,16 @@ const NAV: NavItem[] = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "gerente"] },
   { to: "/app/pdv", label: "PDV", icon: ShoppingCart },
   { to: "/app/produtos", label: "Produtos", icon: Package },
+  { to: "/app/estoque", label: "Estoque", icon: Boxes, roles: ["admin", "gerente"] },
   { to: "/app/categorias", label: "Categorias", icon: Tags, roles: ["admin", "gerente"] },
   { to: "/app/clientes", label: "Clientes", icon: Users },
   { to: "/app/caixa", label: "Caixa", icon: Wallet },
   { to: "/app/financeiro", label: "Financeiro", icon: Receipt, roles: ["admin", "gerente"] },
+  { to: "/app/rateio", label: "Rateio", icon: Split },
+  { to: "/app/marketing", label: "Marketing", icon: ImageIcon, roles: ["admin", "gerente"] },
+  { to: "/app/inteligencia", label: "IA & Promoções", icon: Sparkles, roles: ["admin", "gerente"] },
   { to: "/app/relatorios", label: "Relatórios", icon: BarChart3, roles: ["admin", "gerente"] },
+  { to: "/app/pix", label: "Pix", icon: QrCode, roles: ["admin", "gerente"] },
   { to: "/app/vendedores", label: "Vendedores", icon: UserCog, roles: ["admin"] },
   { to: "/app/configuracoes", label: "Configurações", icon: Settings, roles: ["admin"] },
 ];
