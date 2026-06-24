@@ -16,13 +16,19 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppVendedoresRouteImport } from './routes/app.vendedores'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
+import { Route as AppRateioRouteImport } from './routes/app.rateio'
 import { Route as AppProdutosRouteImport } from './routes/app.produtos'
+import { Route as AppPixRouteImport } from './routes/app.pix'
 import { Route as AppPdvRouteImport } from './routes/app.pdv'
+import { Route as AppMarketingRouteImport } from './routes/app.marketing'
+import { Route as AppInteligenciaRouteImport } from './routes/app.inteligencia'
 import { Route as AppFinanceiroRouteImport } from './routes/app.financeiro'
+import { Route as AppEstoqueRouteImport } from './routes/app.estoque'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppClientesRouteImport } from './routes/app.clientes'
 import { Route as AppCategoriasRouteImport } from './routes/app.categorias'
 import { Route as AppCaixaRouteImport } from './routes/app.caixa'
+import { Route as ApiPublicWebhooksPixRouteImport } from './routes/api/public/webhooks/pix'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -59,9 +65,19 @@ const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
   path: '/relatorios',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRateioRoute = AppRateioRouteImport.update({
+  id: '/rateio',
+  path: '/rateio',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProdutosRoute = AppProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPixRoute = AppPixRouteImport.update({
+  id: '/pix',
+  path: '/pix',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPdvRoute = AppPdvRouteImport.update({
@@ -69,9 +85,24 @@ const AppPdvRoute = AppPdvRouteImport.update({
   path: '/pdv',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMarketingRoute = AppMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInteligenciaRoute = AppInteligenciaRouteImport.update({
+  id: '/inteligencia',
+  path: '/inteligencia',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFinanceiroRoute = AppFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEstoqueRoute = AppEstoqueRouteImport.update({
+  id: '/estoque',
+  path: '/estoque',
   getParentRoute: () => AppRoute,
 } as any)
 const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
@@ -94,6 +125,11 @@ const AppCaixaRoute = AppCaixaRouteImport.update({
   path: '/caixa',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPublicWebhooksPixRoute = ApiPublicWebhooksPixRouteImport.update({
+  id: '/api/public/webhooks/pix',
+  path: '/api/public/webhooks/pix',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -104,12 +140,18 @@ export interface FileRoutesByFullPath {
   '/app/categorias': typeof AppCategoriasRoute
   '/app/clientes': typeof AppClientesRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/estoque': typeof AppEstoqueRoute
   '/app/financeiro': typeof AppFinanceiroRoute
+  '/app/inteligencia': typeof AppInteligenciaRoute
+  '/app/marketing': typeof AppMarketingRoute
   '/app/pdv': typeof AppPdvRoute
+  '/app/pix': typeof AppPixRoute
   '/app/produtos': typeof AppProdutosRoute
+  '/app/rateio': typeof AppRateioRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/vendedores': typeof AppVendedoresRoute
   '/app/': typeof AppIndexRoute
+  '/api/public/webhooks/pix': typeof ApiPublicWebhooksPixRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -119,12 +161,18 @@ export interface FileRoutesByTo {
   '/app/categorias': typeof AppCategoriasRoute
   '/app/clientes': typeof AppClientesRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/estoque': typeof AppEstoqueRoute
   '/app/financeiro': typeof AppFinanceiroRoute
+  '/app/inteligencia': typeof AppInteligenciaRoute
+  '/app/marketing': typeof AppMarketingRoute
   '/app/pdv': typeof AppPdvRoute
+  '/app/pix': typeof AppPixRoute
   '/app/produtos': typeof AppProdutosRoute
+  '/app/rateio': typeof AppRateioRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/vendedores': typeof AppVendedoresRoute
   '/app': typeof AppIndexRoute
+  '/api/public/webhooks/pix': typeof ApiPublicWebhooksPixRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -136,12 +184,18 @@ export interface FileRoutesById {
   '/app/categorias': typeof AppCategoriasRoute
   '/app/clientes': typeof AppClientesRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/estoque': typeof AppEstoqueRoute
   '/app/financeiro': typeof AppFinanceiroRoute
+  '/app/inteligencia': typeof AppInteligenciaRoute
+  '/app/marketing': typeof AppMarketingRoute
   '/app/pdv': typeof AppPdvRoute
+  '/app/pix': typeof AppPixRoute
   '/app/produtos': typeof AppProdutosRoute
+  '/app/rateio': typeof AppRateioRoute
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/vendedores': typeof AppVendedoresRoute
   '/app/': typeof AppIndexRoute
+  '/api/public/webhooks/pix': typeof ApiPublicWebhooksPixRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -154,12 +208,18 @@ export interface FileRouteTypes {
     | '/app/categorias'
     | '/app/clientes'
     | '/app/configuracoes'
+    | '/app/estoque'
     | '/app/financeiro'
+    | '/app/inteligencia'
+    | '/app/marketing'
     | '/app/pdv'
+    | '/app/pix'
     | '/app/produtos'
+    | '/app/rateio'
     | '/app/relatorios'
     | '/app/vendedores'
     | '/app/'
+    | '/api/public/webhooks/pix'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -169,12 +229,18 @@ export interface FileRouteTypes {
     | '/app/categorias'
     | '/app/clientes'
     | '/app/configuracoes'
+    | '/app/estoque'
     | '/app/financeiro'
+    | '/app/inteligencia'
+    | '/app/marketing'
     | '/app/pdv'
+    | '/app/pix'
     | '/app/produtos'
+    | '/app/rateio'
     | '/app/relatorios'
     | '/app/vendedores'
     | '/app'
+    | '/api/public/webhooks/pix'
   id:
     | '__root__'
     | '/'
@@ -185,12 +251,18 @@ export interface FileRouteTypes {
     | '/app/categorias'
     | '/app/clientes'
     | '/app/configuracoes'
+    | '/app/estoque'
     | '/app/financeiro'
+    | '/app/inteligencia'
+    | '/app/marketing'
     | '/app/pdv'
+    | '/app/pix'
     | '/app/produtos'
+    | '/app/rateio'
     | '/app/relatorios'
     | '/app/vendedores'
     | '/app/'
+    | '/api/public/webhooks/pix'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -198,6 +270,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicWebhooksPixRoute: typeof ApiPublicWebhooksPixRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -251,11 +324,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRelatoriosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/rateio': {
+      id: '/app/rateio'
+      path: '/rateio'
+      fullPath: '/app/rateio'
+      preLoaderRoute: typeof AppRateioRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/produtos': {
       id: '/app/produtos'
       path: '/produtos'
       fullPath: '/app/produtos'
       preLoaderRoute: typeof AppProdutosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/pix': {
+      id: '/app/pix'
+      path: '/pix'
+      fullPath: '/app/pix'
+      preLoaderRoute: typeof AppPixRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/pdv': {
@@ -265,11 +352,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPdvRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/marketing': {
+      id: '/app/marketing'
+      path: '/marketing'
+      fullPath: '/app/marketing'
+      preLoaderRoute: typeof AppMarketingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/inteligencia': {
+      id: '/app/inteligencia'
+      path: '/inteligencia'
+      fullPath: '/app/inteligencia'
+      preLoaderRoute: typeof AppInteligenciaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/financeiro': {
       id: '/app/financeiro'
       path: '/financeiro'
       fullPath: '/app/financeiro'
       preLoaderRoute: typeof AppFinanceiroRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/estoque': {
+      id: '/app/estoque'
+      path: '/estoque'
+      fullPath: '/app/estoque'
+      preLoaderRoute: typeof AppEstoqueRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/configuracoes': {
@@ -300,6 +408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCaixaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/public/webhooks/pix': {
+      id: '/api/public/webhooks/pix'
+      path: '/api/public/webhooks/pix'
+      fullPath: '/api/public/webhooks/pix'
+      preLoaderRoute: typeof ApiPublicWebhooksPixRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -308,9 +423,14 @@ interface AppRouteChildren {
   AppCategoriasRoute: typeof AppCategoriasRoute
   AppClientesRoute: typeof AppClientesRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
+  AppEstoqueRoute: typeof AppEstoqueRoute
   AppFinanceiroRoute: typeof AppFinanceiroRoute
+  AppInteligenciaRoute: typeof AppInteligenciaRoute
+  AppMarketingRoute: typeof AppMarketingRoute
   AppPdvRoute: typeof AppPdvRoute
+  AppPixRoute: typeof AppPixRoute
   AppProdutosRoute: typeof AppProdutosRoute
+  AppRateioRoute: typeof AppRateioRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppVendedoresRoute: typeof AppVendedoresRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -321,9 +441,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppCategoriasRoute: AppCategoriasRoute,
   AppClientesRoute: AppClientesRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
+  AppEstoqueRoute: AppEstoqueRoute,
   AppFinanceiroRoute: AppFinanceiroRoute,
+  AppInteligenciaRoute: AppInteligenciaRoute,
+  AppMarketingRoute: AppMarketingRoute,
   AppPdvRoute: AppPdvRoute,
+  AppPixRoute: AppPixRoute,
   AppProdutosRoute: AppProdutosRoute,
+  AppRateioRoute: AppRateioRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
   AppVendedoresRoute: AppVendedoresRoute,
   AppIndexRoute: AppIndexRoute,
@@ -336,6 +461,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicWebhooksPixRoute: ApiPublicWebhooksPixRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
