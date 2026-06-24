@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Trash2, AlertTriangle, PackagePlus } from "lucide-react";
+import { BarcodeInput } from "@/components/barcode-scanner";
 import { brl, num } from "@/lib/format";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
@@ -207,7 +208,7 @@ function ProductDialog({ open, onOpenChange, editing, categories, brands, suppli
         <DialogHeader><DialogTitle>{isEdit ? "Editar produto" : "Novo produto"}</DialogTitle></DialogHeader>
         <form onSubmit={save} className="grid grid-cols-2 gap-3">
           <div className="col-span-2 space-y-1.5"><Label>Nome *</Label><Input required value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label>Código de barras</Label><Input value={form.codigo_barras ?? ""} onChange={(e) => setForm({ ...form, codigo_barras: e.target.value })} /></div>
+          <div className="space-y-1.5"><Label>Código de barras</Label><BarcodeInput value={form.codigo_barras ?? ""} onChange={(v) => setForm({ ...form, codigo_barras: v })} /></div>
           <div className="space-y-1.5">
             <Label>Categoria</Label>
             <Select value={form.category_id ?? ""} onValueChange={(v) => setForm({ ...form, category_id: v })}>
