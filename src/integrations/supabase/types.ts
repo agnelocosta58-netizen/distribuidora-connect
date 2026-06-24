@@ -506,6 +506,7 @@ export type Database = {
         Row: {
           ativo: boolean
           company_id: string | null
+          cpf: string | null
           created_at: string
           email: string
           id: string
@@ -516,6 +517,7 @@ export type Database = {
         Insert: {
           ativo?: boolean
           company_id?: string | null
+          cpf?: string | null
           created_at?: string
           email: string
           id: string
@@ -526,6 +528,7 @@ export type Database = {
         Update: {
           ativo?: boolean
           company_id?: string | null
+          cpf?: string | null
           created_at?: string
           email?: string
           id?: string

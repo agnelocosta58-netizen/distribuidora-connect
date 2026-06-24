@@ -14,7 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as AppUsuariosRouteImport } from './routes/app.usuarios'
+import { Route as AppVendedoresRouteImport } from './routes/app.vendedores'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
 import { Route as AppProdutosRouteImport } from './routes/app.produtos'
 import { Route as AppPdvRouteImport } from './routes/app.pdv'
@@ -49,9 +49,9 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppUsuariosRoute = AppUsuariosRouteImport.update({
-  id: '/usuarios',
-  path: '/usuarios',
+const AppVendedoresRoute = AppVendedoresRouteImport.update({
+  id: '/vendedores',
+  path: '/vendedores',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
@@ -108,7 +108,7 @@ export interface FileRoutesByFullPath {
   '/app/pdv': typeof AppPdvRoute
   '/app/produtos': typeof AppProdutosRoute
   '/app/relatorios': typeof AppRelatoriosRoute
-  '/app/usuarios': typeof AppUsuariosRoute
+  '/app/vendedores': typeof AppVendedoresRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -123,7 +123,7 @@ export interface FileRoutesByTo {
   '/app/pdv': typeof AppPdvRoute
   '/app/produtos': typeof AppProdutosRoute
   '/app/relatorios': typeof AppRelatoriosRoute
-  '/app/usuarios': typeof AppUsuariosRoute
+  '/app/vendedores': typeof AppVendedoresRoute
   '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -140,7 +140,7 @@ export interface FileRoutesById {
   '/app/pdv': typeof AppPdvRoute
   '/app/produtos': typeof AppProdutosRoute
   '/app/relatorios': typeof AppRelatoriosRoute
-  '/app/usuarios': typeof AppUsuariosRoute
+  '/app/vendedores': typeof AppVendedoresRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -158,7 +158,7 @@ export interface FileRouteTypes {
     | '/app/pdv'
     | '/app/produtos'
     | '/app/relatorios'
-    | '/app/usuarios'
+    | '/app/vendedores'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -173,7 +173,7 @@ export interface FileRouteTypes {
     | '/app/pdv'
     | '/app/produtos'
     | '/app/relatorios'
-    | '/app/usuarios'
+    | '/app/vendedores'
     | '/app'
   id:
     | '__root__'
@@ -189,7 +189,7 @@ export interface FileRouteTypes {
     | '/app/pdv'
     | '/app/produtos'
     | '/app/relatorios'
-    | '/app/usuarios'
+    | '/app/vendedores'
     | '/app/'
   fileRoutesById: FileRoutesById
 }
@@ -237,11 +237,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/usuarios': {
-      id: '/app/usuarios'
-      path: '/usuarios'
-      fullPath: '/app/usuarios'
-      preLoaderRoute: typeof AppUsuariosRouteImport
+    '/app/vendedores': {
+      id: '/app/vendedores'
+      path: '/vendedores'
+      fullPath: '/app/vendedores'
+      preLoaderRoute: typeof AppVendedoresRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/relatorios': {
@@ -312,7 +312,7 @@ interface AppRouteChildren {
   AppPdvRoute: typeof AppPdvRoute
   AppProdutosRoute: typeof AppProdutosRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
-  AppUsuariosRoute: typeof AppUsuariosRoute
+  AppVendedoresRoute: typeof AppVendedoresRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -325,7 +325,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPdvRoute: AppPdvRoute,
   AppProdutosRoute: AppProdutosRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
-  AppUsuariosRoute: AppUsuariosRoute,
+  AppVendedoresRoute: AppVendedoresRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
@@ -340,13 +340,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -14,6 +14,7 @@ import { Search, Plus, Minus, Trash2, ShoppingCart, X, ScanLine } from "lucide-r
 import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { BarcodeScanner } from "@/components/barcode-scanner";
 
 export const Route = createFileRoute("/app/pdv")({
   component: PdvPage,
@@ -35,6 +36,7 @@ function PdvPage() {
   const [acrescimo, setAcrescimo] = useState(0);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCart, setShowCart] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
 
   const { data: products = [] } = useQuery({
     queryKey: ["products-pdv", auth.company?.id],
@@ -74,12 +76,11 @@ function PdvPage() {
     setCart([]); setDesconto(0); setAcrescimo(0);
   }
 
-  function scanBarcode() {
-    const code = prompt("Bipe ou digite o código de barras:");
-    if (!code) return;
+  function handleScannedCode(code: string) {
     const p = (products as any[]).find((x) => x.codigo_barras === code);
-    if (!p) return toast.error("Produto não encontrado");
+    if (!p) return toast.error(`Produto não encontrado: ${code}`);
     addProduct(p);
+    toast.success(`Adicionado: ${p.nome}`);
   }
 
   const subtotal = cart.reduce((s, i) => s + i.preco * i.qtd, 0);
@@ -94,7 +95,7 @@ function PdvPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input className="pl-9" placeholder="Buscar produto..." value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
           </div>
-          <Button variant="outline" size="icon" onClick={scanBarcode} title="Código de barras"><ScanLine className="h-4 w-4" /></Button>
+          <Button variant="outline" size="icon" onClick={() => setScanOpen(true)} title="Código de barras"><ScanLine className="h-4 w-4" /></Button>
           <Button className="lg:hidden relative" onClick={() => setShowCart(true)}>
             <ShoppingCart className="h-4 w-4" />
             {cart.length > 0 && <span className="ml-1 text-xs">{cart.length}</span>}
@@ -184,6 +185,8 @@ function PdvPage() {
         pixChave={auth.company?.pix_chave ?? null}
         onDone={() => { setCart([]); setDesconto(0); setAcrescimo(0); setShowCheckout(false); setShowCart(false); qc.invalidateQueries({ queryKey: ["products-pdv"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }}
       />
+
+      <BarcodeScanner open={scanOpen} onOpenChange={setScanOpen} onDetected={handleScannedCode} title="Adicionar produto ao carrinho" />
     </div>
   );
 }
