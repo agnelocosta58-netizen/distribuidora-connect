@@ -152,7 +152,7 @@ function MovementDialog({ product, onClose }: { product: Product; onClose: () =>
     setSaving(true);
     const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", (await supabase.auth.getUser()).data.user!.id).maybeSingle();
     const { error } = await supabase.from("stock_movements").insert({
-      company_id: prof!.company_id, product_id: product.id, tipo, quantidade: q, observacao: obs || null,
+      company_id: prof!.company_id!, product_id: product.id, tipo, quantidade: q, observacao: obs || null,
     });
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -210,7 +210,7 @@ function VariantsDialog({ product, variants, onClose }: { product: Product; vari
       if (!it.ativo && it.id) { deletes.push(it.id); continue; }
       if (!it.ativo) continue;
       upserts.push({
-        id: it.id, company_id: prof!.company_id, product_id: product.id,
+        id: it.id, company_id: prof!.company_id!, product_id: product.id,
         tipo: it.tipo, temperatura: it.temperatura,
         unidades_por_pacote: Number(it.unidades_por_pacote ?? 1),
         codigo_barras: it.codigo_barras || null,

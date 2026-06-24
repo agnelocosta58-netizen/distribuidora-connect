@@ -59,7 +59,7 @@ function GroupCard({ group, parts, onChange }: { group: Group; parts: Part[]; on
     const { data: { user } } = await supabase.auth.getUser();
     const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", user!.id).maybeSingle();
     const { error } = await supabase.from("rateio_participants").insert({
-      company_id: prof!.company_id, group_id: group.id, nome: nome.trim(), valor_devido: Number(valor),
+      company_id: prof!.company_id!, group_id: group.id, nome: nome.trim(), valor_devido: Number(valor),
     });
     if (error) return toast.error(error.message);
     setNome(""); setValor(""); onChange();
@@ -141,7 +141,7 @@ function NewGroupDialog({ onClose }: { onClose: () => void }) {
     const { data: { user } } = await supabase.auth.getUser();
     const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", user!.id).maybeSingle();
     const { error } = await supabase.from("rateio_groups").insert({
-      company_id: prof!.company_id, titulo: titulo.trim(), descricao: descricao || null,
+      company_id: prof!.company_id!, titulo: titulo.trim(), descricao: descricao || null,
       valor_total: Number(valor || 0), created_by: user!.id,
     });
     setSaving(false);

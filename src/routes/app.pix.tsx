@@ -140,7 +140,7 @@ function NewKeyDialog({ onClose }: { onClose: () => void }) {
     const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", user!.id).maybeSingle();
     const { count } = await supabase.from("pix_keys").select("id", { count: "exact", head: true });
     const { error } = await supabase.from("pix_keys").insert({
-      company_id: prof!.company_id, tipo, chave: chave.trim(),
+      company_id: prof!.company_id!, tipo, chave: chave.trim(),
       banco: banco || null, titular: titular || null, padrao: !count, ativa: true,
     });
     setSaving(false);
