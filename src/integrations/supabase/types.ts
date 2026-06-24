@@ -404,6 +404,72 @@ export type Database = {
           },
         ]
       }
+      product_variants: {
+        Row: {
+          ativo: boolean
+          codigo_barras: string | null
+          company_id: string
+          created_at: string
+          estoque: number
+          estoque_minimo: number
+          id: string
+          preco_custo: number
+          preco_venda: number
+          product_id: string
+          temperatura: Database["public"]["Enums"]["variant_temp"]
+          tipo: Database["public"]["Enums"]["variant_pack"]
+          unidades_por_pacote: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo_barras?: string | null
+          company_id: string
+          created_at?: string
+          estoque?: number
+          estoque_minimo?: number
+          id?: string
+          preco_custo?: number
+          preco_venda?: number
+          product_id: string
+          temperatura: Database["public"]["Enums"]["variant_temp"]
+          tipo: Database["public"]["Enums"]["variant_pack"]
+          unidades_por_pacote?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo_barras?: string | null
+          company_id?: string
+          created_at?: string
+          estoque?: number
+          estoque_minimo?: number
+          id?: string
+          preco_custo?: number
+          preco_venda?: number
+          product_id?: string
+          temperatura?: Database["public"]["Enums"]["variant_temp"]
+          tipo?: Database["public"]["Enums"]["variant_pack"]
+          unidades_por_pacote?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           ativo: boolean
@@ -609,6 +675,7 @@ export type Database = {
           quantidade: number
           sale_id: string
           total: number
+          variant_id: string | null
         }
         Insert: {
           company_id: string
@@ -621,6 +688,7 @@ export type Database = {
           quantidade: number
           sale_id: string
           total: number
+          variant_id?: string | null
         }
         Update: {
           company_id?: string
@@ -633,6 +701,7 @@ export type Database = {
           quantidade?: number
           sale_id?: string
           total?: number
+          variant_id?: string | null
         }
         Relationships: [
           {
@@ -654,6 +723,13 @@ export type Database = {
             columns: ["sale_id"]
             isOneToOne: false
             referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -788,6 +864,7 @@ export type Database = {
           sale_id: string | null
           tipo: Database["public"]["Enums"]["stock_move_type"]
           user_id: string | null
+          variant_id: string | null
         }
         Insert: {
           company_id: string
@@ -800,6 +877,7 @@ export type Database = {
           sale_id?: string | null
           tipo: Database["public"]["Enums"]["stock_move_type"]
           user_id?: string | null
+          variant_id?: string | null
         }
         Update: {
           company_id?: string
@@ -812,6 +890,7 @@ export type Database = {
           sale_id?: string | null
           tipo?: Database["public"]["Enums"]["stock_move_type"]
           user_id?: string | null
+          variant_id?: string | null
         }
         Relationships: [
           {
@@ -826,6 +905,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -946,6 +1032,8 @@ export type Database = {
       payment_method: "dinheiro" | "pix" | "debito" | "credito" | "fiado"
       sale_status: "aberta" | "concluida" | "cancelada"
       stock_move_type: "entrada" | "saida" | "ajuste" | "venda" | "devolucao"
+      variant_pack: "unidade" | "fardo" | "caixa"
+      variant_temp: "quente" | "gelado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1089,6 +1177,8 @@ export const Constants = {
       payment_method: ["dinheiro", "pix", "debito", "credito", "fiado"],
       sale_status: ["aberta", "concluida", "cancelada"],
       stock_move_type: ["entrada", "saida", "ajuste", "venda", "devolucao"],
+      variant_pack: ["unidade", "fardo", "caixa"],
+      variant_temp: ["quente", "gelado"],
     },
   },
 } as const
