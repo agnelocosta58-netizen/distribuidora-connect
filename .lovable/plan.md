@@ -1,62 +1,86 @@
-## Visão geral
+# Plano — Pix MP, Imagens, Rateio (custo real), Variações e Login
 
-Você escolheu os 4 blocos. Vou entregar em ondas para garantir qualidade — cada onda é um turno meu. Se aprovar este plano, **começo agora pela Onda 1**.
+Vou dividir em 5 frentes que serão entregues nesta ordem dentro da mesma sessão.
 
----
+## 1. Integração Pix via Mercado Pago
 
-## Onda 1 — Correções de UI + Vendedores + Leitor de código de barras
+**Backend (server functions + webhook):**
+- Nova secret `MERCADO_PAGO_ACCESS_TOKEN` (solicitada via add_secret).
+- `src/lib/pix-mp.functions.ts`:
+  - `createPixCharge({ sale_id, valor, descricao })` → chama `POST https://api.mercadopago.com/v1/payments` com `payment_method_id: "pix"`, salva `pix_transactions` com `txid` = `id` do MP, `qr_code` e `qr_code_base64`.
+  - `checkPixStatus({ transaction_id })` → polling de fallback.
+- Atualizar `src/routes/api/public/webhooks/pix.ts` para o formato do MP (`type: "payment"`, `data.id`), buscar pagamento por id, validar `x-signature` HMAC com `MERCADO_PAGO_WEBHOOK_SECRET`, marcar `pix_transactions.status = 'pago'`, `pago_em = now()`, e atualizar `sales.status = 'pago'` + `pago_em`.
+- Adicionar coluna `pago_em` em `sales` se não existir.
 
-**Correção da sidebar**
-- Refatoro `src/routes/app.tsx` para usar o padrão shadcn `Sidebar` + `SidebarTrigger` + `Sheet` no mobile (em vez do drawer manual atual). Isso elimina o "X" fantasma que sobrepõe o hambúrguer.
-- Botão do menu sempre visível no header mobile, com área de toque de 44px, e o trigger desktop colado ao topo.
-- Varro as páginas internas (`page-header`, listagens) aplicando o padrão grid `minmax(0,1fr) auto` + `min-w-0`/`shrink-0`/`truncate` para nada sobrepor.
+**Frontend:**
+- No PDV, ao escolher Pix: gerar cobrança, exibir QR code + copia-e-cola, e abrir canal Realtime na tabela `pix_transactions` filtrando por `id` para mostrar "Pagamento aprovado ✓" + toast em tempo real.
+- Página `/app/pix` ganha aba "Histórico" com filtros por status/data.
 
-**Vendedores (CRUD completo)**
-- Migração: adiciona `cpf` (único por empresa) em `profiles`, índice e validação. `ativo` já existe.
-- Server function `admin-invite-user` (`createServerFn` + `requireSupabaseAuth` + checagem de role admin) que cria o usuário no Auth (via `supabaseAdmin`), cria profile vinculado à empresa atual e atribui o role `vendedor` (ou gerente).
-- Tela `/app/vendedores` (ou aba dentro de Usuários): criar, editar, bloquear (`ativo=false`), reativar e excluir.
-- PDV: continua gravando `created_by` na venda (já existe). Adiciono coluna "Vendedor" nos relatórios e no histórico de vendas.
+## 2. Imagens de produtos
 
-**Leitor de código de barras no cadastro de produto**
-- Campo "Código de barras" passa a ter:
-  - input manual (já existe);
-  - botão "Escanear com câmera" → abre um `Dialog` com leitor via `@zxing/browser` (suporta EAN-13/UPC/Code128/QR);
-  - suporte nativo a leitores USB/Bluetooth: o input fica em modo "scanner" detectando entrada rápida + Enter, então qualquer leitor que se comporte como teclado funciona automaticamente.
-- Mesmo leitor reaproveitado no PDV (botão "scanner" ao lado da busca).
+- Bucket `product-images` (público) via `storage_create_bucket` + policies `TO authenticated` insert/update/delete por `company_id` (path `{company_id}/{product_id}/...`).
+- Componente `<ProductImagePicker>`:
+  - **Upload** (`<input type="file" accept="image/*">`).
+  - **Câmera** (`capture="environment"`) — botão "Tirar foto".
+  - **Buscar na internet**: server function `searchProductImages(query)` usando DuckDuckGo Image API (sem chave) ou Bing via Lovable AI gateway; retorna URLs. Modal mostra grid; ao escolher, server function baixa a imagem, salva no bucket e atualiza `products.imagem_url`.
+- Substituir o input de URL atual em `app.produtos.tsx` por esse componente. Miniaturas já aparecem onde houver `imagem_url`; reforçar nas listagens (PDV, estoque).
 
----
+## 3. Refazer módulo de Rateio (custo real por produto)
 
-## Onda 2 — Estoque por temperatura/embalagem + tela Estoque completo
+Descartar a tela "rateio de despesas entre pessoas". Substituir por **Rateio de custos operacionais**:
 
-- Migração: nova tabela `product_variants` (product_id, tipo ∈ {unidade, fardo, caixa}, temperatura ∈ {quente, gelado}, estoque, estoque_minimo, preco_custo, preco_venda, ativo). Variantes opcionais por produto (você só ativa as que existem).
-- Trigger atualiza `products.estoque` agregado para retrocompatibilidade.
-- `stock_movements` e `sale_items` ganham `variant_id` (nullable para histórico).
-- PDV mostra seletor de variante quando o produto tem mais de uma.
-- Nova tela **Estoque** (`/app/estoque`) com tabela detalhada: imagem, categoria, código, mínimo, quente/gelado, un/fardo/caixa, custo, venda, **margem (%)**, validade, última movimentação, e drawer com histórico completo.
+**Migration:**
+- `DROP TABLE rateio_groups, rateio_participants` (sem uso real ainda).
+- `expenses(id, company_id, descricao, categoria, valor, competencia date, recorrente bool)`.
+- `cost_allocations(id, company_id, periodo_inicio, periodo_fim, metodo enum('quantidade','faturamento','categoria','percentual'), total_despesas, criado_em)`.
+- `product_cost_allocations(allocation_id, product_id, valor_rateado, custo_real, margem_real, lucro_liquido)`.
+- Função `recompute_cost_allocation(allocation_id)` que faz o cálculo.
 
----
+**Frontend (`/app/rateio` reescrita):**
+- Aba **Despesas**: CRUD com categorias (Energia, Água, Internet, Aluguel, Salários, Impostos, Combustível, Fretes, Taxas bancárias, Outras).
+- Aba **Apuração**: selecionar período (diário/semanal/mensal/custom) e método; mostra total de despesas e tabela por produto com Custo compra | Rateio | Custo real | Preço venda | Margem % | Lucro líquido.
+- Botão "Aplicar custo real" persiste no `products.custo_real` (nova coluna).
+- Recalcula automaticamente via trigger ao inserir nova despesa no período aberto.
 
-## Onda 3 — Rateio + Gerador de Posts + IA de Promoções
+## 4. Variações completas
 
-- **Rateio:** tabelas `rateio_groups` e `rateio_participants` (nome, valor, pago?, data). Tela cria grupo, calcula valor individual, registra pagamentos, mostra pendentes e gera relatório.
-- **Gerador de Posts:** módulo de marketing que renderiza arte promocional num `<canvas>` (3 templates), usando imagem do produto + logo + preço + telefone + endereço da empresa. Botão "Copiar legenda" + "Compartilhar no WhatsApp" (link `wa.me`). Tudo client-side, sem custo de IA.
-- **IA de promoções e metas:** server function chamando Lovable AI (Gemini 3 Flash) que recebe produtos com baixo giro / parados / perto do vencimento e devolve sugestões estruturadas (desconto sugerido, meta de unidades, previsão de lucro, tempo estimado para zerar). Exibido num painel `/app/inteligencia` com alertas no Dashboard.
+Tabela `product_variants` já existe. Falta UI completa:
+- Gerenciador de variações dentro do produto: nome (auto: Unidade Quente / Fardo Gelado…), código de barras, estoque, preço custo, preço venda, ativo.
+- Geração rápida: seleciona embalagens (Unidade/Fardo/Caixa) × temperaturas (Quente/Gelado) e cria todas as combinações.
+- **PDV**: ao adicionar produto que tem variações, abrir seletor obrigatório de variação; usar `variant_id` no `sale_items` (já suportado pelos triggers).
+- Buscar produto por código de barras encontra também por `product_variants.codigo_barras`.
+- Histórico de vendas por variação na tela de Estoque.
 
----
+## 5. Segurança e Login
 
-## Onda 4 — Pix dinâmico com confirmação automática
+Em `auth.tsx` e `reset-password.tsx`:
+- Campo "Confirmar senha" no cadastro e no reset.
+- Botão olho (mostrar/ocultar) em todos os campos de senha.
+- Validação: senhas iguais, mínimo 8 caracteres, mensagens amigáveis com `toast.error`.
+- Feedback visual (borda destrutiva) quando não coincidem.
 
-- Tela de **Configurações → Chaves Pix**: CRUD de chaves (tipo, valor, banco, titular, status), com uma marcada como padrão.
-- PDV: ao escolher Pix, chama server function que gera QR dinâmico vinculado à venda (via provedor escolhido — Mercado Pago, Asaas ou Efí, decidiremos antes desta onda).
-- Webhook público em `/api/public/webhooks/pix` valida assinatura, marca a venda como Paga, registra data/hora e dispara realtime para a tela do PDV mudar para "Pagamento confirmado ✅".
-- Painel admin com histórico de transações Pix (pendentes/pagas/canceladas) por chave.
+## Detalhes técnicos
 
-> Para a Onda 4 vou precisar das credenciais do provedor — pedirei via `add_secret` no momento certo.
+```text
+Pix MP fluxo
+  PDV → createPixCharge → MP API → grava pix_transactions
+  Cliente paga → MP envia webhook → /api/public/webhooks/pix
+  Webhook valida assinatura → update pix_transactions + sales
+  PDV escuta Realtime em pix_transactions.id → mostra "Pago"
+```
 
----
+Secrets necessárias:
+- `MERCADO_PAGO_ACCESS_TOKEN` (obrigatória)
+- `MERCADO_PAGO_WEBHOOK_SECRET` (assinatura)
 
-## O que entrego neste turno
+URL do webhook a configurar no painel MP:
+`https://project--53224896-c153-4a7f-b008-00438dec8de6.lovable.app/api/public/webhooks/pix`
 
-Onda 1 inteira: correção do menu/overlap, CRUD de vendedores com CPF e bloqueio, e leitor de código de barras (câmera + USB/BT) no cadastro de produto e PDV.
+## Ordem de execução
+1. Migrations (sales.pago_em, products.custo_real, expenses, cost_allocations, drop rateio_groups).
+2. Bucket product-images + policies.
+3. Secrets MP (pedir ao usuário).
+4. Backend: pix-mp.functions.ts + webhook + image search/upload functions.
+5. Frontend: PDV (Pix QR + Realtime + seletor de variação), Produtos (ImagePicker + variações), Rateio reescrito, Auth/Reset com confirmar senha.
 
-Confirma que sigo?
+Confirme para eu começar — vou pedir o `MERCADO_PAGO_ACCESS_TOKEN` e o `MERCADO_PAGO_WEBHOOK_SECRET` no início da execução.

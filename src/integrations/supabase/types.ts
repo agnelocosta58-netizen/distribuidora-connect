@@ -351,6 +351,50 @@ export type Database = {
         }
         Relationships: []
       }
+      cost_allocations: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          metodo: Database["public"]["Enums"]["allocation_method"]
+          observacao: string | null
+          periodo_fim: string
+          periodo_inicio: string
+          total_despesas: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          metodo?: Database["public"]["Enums"]["allocation_method"]
+          observacao?: string | null
+          periodo_fim: string
+          periodo_inicio: string
+          total_despesas?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          metodo?: Database["public"]["Enums"]["allocation_method"]
+          observacao?: string | null
+          periodo_fim?: string
+          periodo_inicio?: string
+          total_despesas?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cost_allocations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           bairro: string | null
@@ -397,6 +441,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "customers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          categoria: string
+          company_id: string
+          competencia: string
+          created_at: string
+          created_by: string | null
+          descricao: string
+          id: string
+          observacao: string | null
+          recorrente: boolean
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          categoria: string
+          company_id: string
+          competencia?: string
+          created_at?: string
+          created_by?: string | null
+          descricao: string
+          id?: string
+          observacao?: string | null
+          recorrente?: boolean
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          categoria?: string
+          company_id?: string
+          competencia?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string
+          id?: string
+          observacao?: string | null
+          recorrente?: boolean
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -514,6 +608,73 @@ export type Database = {
           },
         ]
       }
+      product_cost_allocations: {
+        Row: {
+          allocation_id: string
+          company_id: string
+          created_at: string
+          custo_real: number
+          faturamento: number
+          id: string
+          lucro_liquido: number
+          margem_real: number
+          percentual: number
+          product_id: string
+          quantidade_vendida: number
+          valor_rateado: number
+        }
+        Insert: {
+          allocation_id: string
+          company_id: string
+          created_at?: string
+          custo_real?: number
+          faturamento?: number
+          id?: string
+          lucro_liquido?: number
+          margem_real?: number
+          percentual?: number
+          product_id: string
+          quantidade_vendida?: number
+          valor_rateado?: number
+        }
+        Update: {
+          allocation_id?: string
+          company_id?: string
+          created_at?: string
+          custo_real?: number
+          faturamento?: number
+          id?: string
+          lucro_liquido?: number
+          margem_real?: number
+          percentual?: number
+          product_id?: string
+          quantidade_vendida?: number
+          valor_rateado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_cost_allocations_allocation_id_fkey"
+            columns: ["allocation_id"]
+            isOneToOne: false
+            referencedRelation: "cost_allocations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_cost_allocations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_cost_allocations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_variants: {
         Row: {
           ativo: boolean
@@ -588,6 +749,7 @@ export type Database = {
           codigo_barras: string | null
           company_id: string
           created_at: string
+          custo_real: number | null
           descricao: string | null
           estoque: number
           estoque_minimo: number
@@ -610,6 +772,7 @@ export type Database = {
           codigo_barras?: string | null
           company_id: string
           created_at?: string
+          custo_real?: number | null
           descricao?: string | null
           estoque?: number
           estoque_minimo?: number
@@ -632,6 +795,7 @@ export type Database = {
           codigo_barras?: string | null
           company_id?: string
           created_at?: string
+          custo_real?: number | null
           descricao?: string | null
           estoque?: number
           estoque_minimo?: number
@@ -773,104 +937,6 @@ export type Database = {
           },
         ]
       }
-      rateio_groups: {
-        Row: {
-          company_id: string
-          created_at: string
-          created_by: string | null
-          descricao: string | null
-          id: string
-          status: Database["public"]["Enums"]["rateio_status"]
-          titulo: string
-          updated_at: string
-          valor_total: number
-        }
-        Insert: {
-          company_id: string
-          created_at?: string
-          created_by?: string | null
-          descricao?: string | null
-          id?: string
-          status?: Database["public"]["Enums"]["rateio_status"]
-          titulo: string
-          updated_at?: string
-          valor_total?: number
-        }
-        Update: {
-          company_id?: string
-          created_at?: string
-          created_by?: string | null
-          descricao?: string | null
-          id?: string
-          status?: Database["public"]["Enums"]["rateio_status"]
-          titulo?: string
-          updated_at?: string
-          valor_total?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "rateio_groups_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      rateio_participants: {
-        Row: {
-          company_id: string
-          created_at: string
-          group_id: string
-          id: string
-          nome: string
-          observacao: string | null
-          pago_em: string | null
-          updated_at: string
-          valor_devido: number
-          valor_pago: number
-        }
-        Insert: {
-          company_id: string
-          created_at?: string
-          group_id: string
-          id?: string
-          nome: string
-          observacao?: string | null
-          pago_em?: string | null
-          updated_at?: string
-          valor_devido?: number
-          valor_pago?: number
-        }
-        Update: {
-          company_id?: string
-          created_at?: string
-          group_id?: string
-          id?: string
-          nome?: string
-          observacao?: string | null
-          pago_em?: string | null
-          updated_at?: string
-          valor_devido?: number
-          valor_pago?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "rateio_participants_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "rateio_participants_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "rateio_groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       sale_items: {
         Row: {
           company_id: string
@@ -998,6 +1064,7 @@ export type Database = {
           id: string
           numero: number
           observacao: string | null
+          pago_em: string | null
           status: Database["public"]["Enums"]["sale_status"]
           subtotal: number
           total: number
@@ -1014,6 +1081,7 @@ export type Database = {
           id?: string
           numero?: number
           observacao?: string | null
+          pago_em?: string | null
           status?: Database["public"]["Enums"]["sale_status"]
           subtotal?: number
           total?: number
@@ -1030,6 +1098,7 @@ export type Database = {
           id?: string
           numero?: number
           observacao?: string | null
+          pago_em?: string | null
           status?: Database["public"]["Enums"]["sale_status"]
           subtotal?: number
           total?: number
@@ -1223,8 +1292,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      recompute_cost_allocation: {
+        Args: { _allocation_id: string; _percent_map?: Json }
+        Returns: undefined
+      }
     }
     Enums: {
+      allocation_method:
+        | "quantidade"
+        | "faturamento"
+        | "categoria"
+        | "percentual"
       ap_status: "pendente" | "parcial" | "pago" | "cancelado"
       app_role: "admin" | "gerente" | "vendedor"
       ar_status: "pendente" | "parcial" | "pago" | "cancelado"
@@ -1372,6 +1450,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      allocation_method: [
+        "quantidade",
+        "faturamento",
+        "categoria",
+        "percentual",
+      ],
       ap_status: ["pendente", "parcial", "pago", "cancelado"],
       app_role: ["admin", "gerente", "vendedor"],
       ar_status: ["pendente", "parcial", "pago", "cancelado"],
