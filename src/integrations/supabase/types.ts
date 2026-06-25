@@ -549,11 +549,14 @@ export type Database = {
         Row: {
           company_id: string
           created_at: string
+          expires_at: string | null
           id: string
           pago_em: string | null
           pix_key_id: string | null
           provider: string | null
           provider_payload: Json | null
+          qr_code: string | null
+          qr_code_base64: string | null
           qr_payload: string | null
           sale_id: string | null
           status: Database["public"]["Enums"]["pix_tx_status"]
@@ -564,11 +567,14 @@ export type Database = {
         Insert: {
           company_id: string
           created_at?: string
+          expires_at?: string | null
           id?: string
           pago_em?: string | null
           pix_key_id?: string | null
           provider?: string | null
           provider_payload?: Json | null
+          qr_code?: string | null
+          qr_code_base64?: string | null
           qr_payload?: string | null
           sale_id?: string | null
           status?: Database["public"]["Enums"]["pix_tx_status"]
@@ -579,11 +585,14 @@ export type Database = {
         Update: {
           company_id?: string
           created_at?: string
+          expires_at?: string | null
           id?: string
           pago_em?: string | null
           pix_key_id?: string | null
           provider?: string | null
           provider_payload?: Json | null
+          qr_code?: string | null
+          qr_code_base64?: string | null
           qr_payload?: string | null
           sale_id?: string | null
           status?: Database["public"]["Enums"]["pix_tx_status"]
@@ -1317,7 +1326,12 @@ export type Database = {
       cash_status: "aberto" | "fechado"
       payment_method: "dinheiro" | "pix" | "debito" | "credito" | "fiado"
       pix_key_type: "cpf" | "cnpj" | "email" | "telefone" | "aleatoria"
-      pix_tx_status: "pendente" | "pago" | "cancelado" | "expirado"
+      pix_tx_status:
+        | "pendente"
+        | "pago"
+        | "cancelado"
+        | "expirado"
+        | "estornado"
       rateio_status: "aberto" | "fechado" | "cancelado"
       sale_status: "aberta" | "concluida" | "cancelada"
       stock_move_type: "entrada" | "saida" | "ajuste" | "venda" | "devolucao"
@@ -1471,7 +1485,7 @@ export const Constants = {
       cash_status: ["aberto", "fechado"],
       payment_method: ["dinheiro", "pix", "debito", "credito", "fiado"],
       pix_key_type: ["cpf", "cnpj", "email", "telefone", "aleatoria"],
-      pix_tx_status: ["pendente", "pago", "cancelado", "expirado"],
+      pix_tx_status: ["pendente", "pago", "cancelado", "expirado", "estornado"],
       rateio_status: ["aberto", "fechado", "cancelado"],
       sale_status: ["aberta", "concluida", "cancelada"],
       stock_move_type: ["entrada", "saida", "ajuste", "venda", "devolucao"],
