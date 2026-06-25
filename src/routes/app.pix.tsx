@@ -52,10 +52,10 @@ function PixPage() {
     <PageContainer>
       <PageHeader title="Pix" subtitle="Chaves, recebimentos e confirmações" actions={<Button onClick={() => setOpenNew(true)}><Plus className="h-4 w-4 mr-1" /> Nova chave</Button>} />
 
-      <Card className="p-3 mb-4 border-amber-200 bg-amber-50 text-amber-900 text-sm flex items-start gap-2">
+      <Card className="p-3 mb-4 border-emerald-200 bg-emerald-50 text-emerald-900 text-sm flex items-start gap-2">
         <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
         <div>
-          <b>Confirmação automática em tempo real</b> requer um provedor Pix (Mercado Pago, Asaas ou Efí). Quando você escolher, configuramos o webhook e o QR dinâmico. Por enquanto, é possível cadastrar chaves, gerar QR estático no PDV e marcar pagamentos manualmente.
+          <b>Mercado Pago ativo.</b> O PDV gera QR Pix dinâmico e o status é atualizado em tempo real via webhook. Configure no painel do Mercado Pago a URL <code className="font-mono text-xs">/api/public/webhooks/pix</code> deste app para receber as notificações.
         </div>
       </Card>
 
