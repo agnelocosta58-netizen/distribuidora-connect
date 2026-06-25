@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Beer, Loader2 } from "lucide-react";
+import { PasswordInput } from "@/components/password-input";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({
-    meta: [{ title: "Entrar — Distribuidora" }],
-  }),
+  head: () => ({ meta: [{ title: "Entrar — Distribuidora" }] }),
   component: AuthPage,
 });
 
@@ -51,9 +50,7 @@ function AuthPage() {
           </Tabs>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Acesso interno da distribuidora
-        </p>
+        <p className="text-center text-xs text-muted-foreground mt-6">Acesso interno da distribuidora</p>
       </div>
     </div>
   );
@@ -91,7 +88,7 @@ function LoginForm({ loading, setLoading }: { loading: boolean; setLoading: (b: 
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Senha</Label>
-        <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <PasswordInput id="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
       <button type="button" onClick={recuperar} className="text-xs text-primary hover:underline">Esqueci minha senha</button>
       <Button type="submit" className="w-full" disabled={loading}>
@@ -104,15 +101,17 @@ function LoginForm({ loading, setLoading }: { loading: boolean; setLoading: (b: 
 function SignupForm({ loading, setLoading }: { loading: boolean; setLoading: (b: boolean) => void }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    nome: "", email: "", password: "", telefone: "",
+    nome: "", email: "", password: "", password2: "", telefone: "",
     company_nome: "", company_cnpj: "", company_telefone: "",
     company_endereco: "", company_cidade: "", company_estado: "", company_cep: "",
   });
   const set = (k: string, v: string) => setForm({ ...form, [k]: v });
+  const mismatch = form.password2.length > 0 && form.password !== form.password2;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (form.password.length < 6) return toast.error("Senha precisa ter ao menos 6 caracteres");
+    if (form.password.length < 8) return toast.error("A senha precisa ter ao menos 8 caracteres");
+    if (form.password !== form.password2) return toast.error("As senhas não coincidem");
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email: form.email.trim(),
@@ -137,10 +136,7 @@ function SignupForm({ loading, setLoading }: { loading: boolean; setLoading: (b:
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="text-sm font-semibold text-foreground">Dados da empresa</div>
-      <div className="space-y-2">
-        <Label>Nome da empresa *</Label>
-        <Input required value={form.company_nome} onChange={(e) => set("company_nome", e.target.value)} />
-      </div>
+      <div className="space-y-2"><Label>Nome da empresa *</Label><Input required value={form.company_nome} onChange={(e) => set("company_nome", e.target.value)} /></div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2"><Label>CNPJ</Label><Input value={form.company_cnpj} onChange={(e) => set("company_cnpj", e.target.value)} /></div>
         <div className="space-y-2"><Label>Telefone</Label><Input value={form.company_telefone} onChange={(e) => set("company_telefone", e.target.value)} /></div>
@@ -158,9 +154,20 @@ function SignupForm({ loading, setLoading }: { loading: boolean; setLoading: (b:
         <div className="space-y-2"><Label>E-mail *</Label><Input type="email" required value={form.email} onChange={(e) => set("email", e.target.value)} /></div>
         <div className="space-y-2"><Label>Telefone</Label><Input value={form.telefone} onChange={(e) => set("telefone", e.target.value)} /></div>
       </div>
-      <div className="space-y-2"><Label>Senha *</Label><Input type="password" required minLength={6} value={form.password} onChange={(e) => set("password", e.target.value)} /></div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label>Senha *</Label>
+          <PasswordInput required minLength={8} value={form.password} onChange={(e) => set("password", e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label>Confirmar senha *</Label>
+          <PasswordInput required minLength={8} value={form.password2} onChange={(e) => set("password2", e.target.value)}
+            className={mismatch ? "border-destructive focus-visible:ring-destructive" : ""} />
+          {mismatch && <p className="text-xs text-destructive">As senhas não coincidem</p>}
+        </div>
+      </div>
 
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button type="submit" className="w-full" disabled={loading || mismatch}>
         {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Criar conta
       </Button>
     </form>
