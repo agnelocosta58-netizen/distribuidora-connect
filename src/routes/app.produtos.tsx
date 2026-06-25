@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Trash2, AlertTriangle, PackagePlus } from "lucide-react";
 import { BarcodeInput } from "@/components/barcode-scanner";
+import { ProductImagePicker } from "@/components/product-image-picker";
 import { brl, num } from "@/lib/format";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
@@ -168,7 +169,7 @@ function ProductDialog({ open, onOpenChange, editing, categories, brands, suppli
     nome: "", codigo_barras: "", category_id: "", brand_id: "", supplier_id: "",
     unidade: "un", tamanho: "", volume: "",
     estoque: 0, estoque_minimo: 0, preco_custo: 0, preco_venda: 0,
-    validade: "", descricao: "",
+    validade: "", descricao: "", imagem_url: "",
   };
   const [form, setForm] = useState<any>(empty);
 
@@ -208,6 +209,10 @@ function ProductDialog({ open, onOpenChange, editing, categories, brands, suppli
         <DialogHeader><DialogTitle>{isEdit ? "Editar produto" : "Novo produto"}</DialogTitle></DialogHeader>
         <form onSubmit={save} className="grid grid-cols-2 gap-3">
           <div className="col-span-2 space-y-1.5"><Label>Nome *</Label><Input required value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
+          <div className="col-span-2"><Label className="mb-1.5 block">Imagem do produto</Label>
+            <ProductImagePicker value={form.imagem_url || null} onChange={(url) => setForm({ ...form, imagem_url: url ?? "" })}
+              productId={editing?.id ?? null} productName={form.nome} companyId={companyId} />
+          </div>
           <div className="space-y-1.5"><Label>Código de barras</Label><BarcodeInput value={form.codigo_barras ?? ""} onChange={(v) => setForm({ ...form, codigo_barras: v })} /></div>
           <div className="space-y-1.5">
             <Label>Categoria</Label>
