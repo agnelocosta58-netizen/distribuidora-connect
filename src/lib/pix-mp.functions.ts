@@ -117,7 +117,7 @@ export const checkPixStatus = createServerFn({ method: "POST" })
         .update({ status: "pago", pago_em, provider_payload: payload })
         .eq("id", tx.id);
       if (tx.sale_id) {
-        await supabase.from("sales").update({ status: "pago", pago_em }).eq("id", tx.sale_id);
+        await supabase.from("sales").update({ status: "concluida", pago_em }).eq("id", tx.sale_id);
       }
       return { status: "pago", pago_em };
     }

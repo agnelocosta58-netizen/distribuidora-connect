@@ -77,7 +77,7 @@ export const Route = createFileRoute("/api/public/webhooks/pix")({
         if (tx?.sale_id && update.status === "pago") {
           await supabaseAdmin
             .from("sales")
-            .update({ status: "pago", pago_em: update.pago_em })
+            .update({ status: "concluida", pago_em: update.pago_em })
             .eq("id", tx.sale_id);
         }
 
