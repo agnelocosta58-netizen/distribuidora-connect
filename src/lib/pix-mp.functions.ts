@@ -8,9 +8,24 @@ interface CreateInput {
   payer_email?: string;
 }
 
+async function getMpToken(supabase: any, companyId: string): Promise<string> {
+  const { data: integ } = await supabase
+    .from("bank_integrations")
+    .select("access_token")
+    .eq("company_id", companyId)
+    .eq("provider", "mercado_pago")
+    .eq("ativo", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const token = integ?.access_token || process.env.MERCADO_PAGO_ACCESS_TOKEN;
+  if (!token) throw new Error("Integração Mercado Pago não configurada. Cadastre em Integrações bancárias.");
+  return token;
+}
+
 /**
  * Cria cobrança Pix dinâmica no Mercado Pago e registra em pix_transactions.
- * Retorna QR code (base64) + copia-e-cola + id da transação.
+ * Usa o Access Token da integração ativa da empresa (com fallback ao env).
  */
 export const createPixCharge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -21,9 +36,6 @@ export const createPixCharge = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-    if (!token) throw new Error("MERCADO_PAGO_ACCESS_TOKEN não configurado");
-
     const { supabase, userId } = context;
     const { data: prof } = await supabase
       .from("profiles")
@@ -32,6 +44,8 @@ export const createPixCharge = createServerFn({ method: "POST" })
       .maybeSingle();
     const companyId = prof?.company_id;
     if (!companyId) throw new Error("Empresa não encontrada");
+
+    const token = await getMpToken(supabase, companyId);
 
     const idempotency = crypto.randomUUID();
     const expires = new Date(Date.now() + 30 * 60 * 1000).toISOString();
@@ -93,8 +107,6 @@ export const checkPixStatus = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-    if (!token) throw new Error("MERCADO_PAGO_ACCESS_TOKEN não configurado");
     const { supabase } = context;
 
     const { data: tx } = await supabase
@@ -103,6 +115,8 @@ export const checkPixStatus = createServerFn({ method: "POST" })
       .eq("id", data.transaction_id)
       .maybeSingle();
     if (!tx?.txid) throw new Error("Transação não encontrada");
+
+    const token = await getMpToken(supabase, tx.company_id);
 
     const res = await fetch(`https://api.mercadopago.com/v1/payments/${tx.txid}`, {
       headers: { Authorization: `Bearer ${token}` },
