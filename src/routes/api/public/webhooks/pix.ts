@@ -6,18 +6,50 @@ import { createFileRoute } from "@tanstack/react-router";
  * Configure em https://www.mercadopago.com.br/developers/panel/notifications
  * URL: https://project--{project-id}.lovable.app/api/public/webhooks/pix
  * Evento: payment
+ *
+ * Multi-tenant: identifica a empresa pelo `txid` (registrado em pix_transactions
+ * quando o PDV gerou o QR) e carrega as credenciais da bank_integrations dela.
  */
 export const Route = createFileRoute("/api/public/webhooks/pix")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-        const webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
-        if (!token) return new Response("Missing token", { status: 500 });
-
         const body = await request.text();
         let payload: any;
         try { payload = JSON.parse(body); } catch { return new Response("Invalid JSON", { status: 400 }); }
+
+        const type = payload?.type ?? payload?.action?.split(".")[0];
+        const paymentId = payload?.data?.id;
+        if (type !== "payment" || !paymentId) return new Response("ignored", { status: 200 });
+
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+        // Localiza a transação para descobrir a empresa
+        const { data: existing } = await supabaseAdmin
+          .from("pix_transactions")
+          .select("id, company_id, sale_id, status")
+          .eq("txid", String(paymentId))
+          .maybeSingle();
+
+        // Carrega credenciais: tenta integração da empresa, cai para env
+        let token: string | undefined;
+        let webhookSecret: string | undefined;
+        if (existing?.company_id) {
+          const { data: integ } = await supabaseAdmin
+            .from("bank_integrations")
+            .select("access_token, webhook_secret")
+            .eq("company_id", existing.company_id)
+            .eq("provider", "mercado_pago")
+            .eq("ativo", true)
+            .order("updated_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          token = integ?.access_token || undefined;
+          webhookSecret = integ?.webhook_secret || undefined;
+        }
+        token = token || process.env.MERCADO_PAGO_ACCESS_TOKEN;
+        webhookSecret = webhookSecret || process.env.MERCADO_PAGO_WEBHOOK_SECRET;
+        if (!token) return new Response("Missing token", { status: 500 });
 
         // Validação de assinatura (formato Mercado Pago: ts=...,v1=...)
         if (webhookSecret) {
@@ -41,10 +73,6 @@ export const Route = createFileRoute("/api/public/webhooks/pix")({
           }
         }
 
-        const type = payload?.type ?? payload?.action?.split(".")[0];
-        const paymentId = payload?.data?.id;
-        if (type !== "payment" || !paymentId) return new Response("ignored", { status: 200 });
-
         // Consulta detalhes do pagamento
         const detRes = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -55,7 +83,6 @@ export const Route = createFileRoute("/api/public/webhooks/pix")({
         const status: string = (det?.status ?? "").toLowerCase();
         const txid = String(paymentId);
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const update: any = { provider_payload: det, updated_at: new Date().toISOString() };
         if (status === "approved") {
           update.status = "pago";
