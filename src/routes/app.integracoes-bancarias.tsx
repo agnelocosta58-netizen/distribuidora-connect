@@ -161,7 +161,7 @@ function IntegrationDialog({ item, onClose }: { item: Integ | null; onClose: () 
       } else {
         const { data: { user } } = await supabase.auth.getUser();
         const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", user!.id).maybeSingle();
-        const { error } = await supabase.from("bank_integrations").insert({ ...form, company_id: prof!.company_id });
+        const { error } = await supabase.from("bank_integrations").insert({ ...form, company_id: prof!.company_id! });
         if (error) throw error;
         toast.success("Integração cadastrada");
       }
