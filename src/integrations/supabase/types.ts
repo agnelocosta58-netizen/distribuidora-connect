@@ -141,6 +141,65 @@ export type Database = {
           },
         ]
       }
+      bank_integrations: {
+        Row: {
+          access_token: string | null
+          ambiente: string
+          api_key: string | null
+          ativo: boolean
+          client_id: string | null
+          client_secret: string | null
+          company_id: string
+          created_at: string
+          id: string
+          nome: string
+          provider: string
+          public_key: string | null
+          updated_at: string
+          webhook_secret: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          ambiente?: string
+          api_key?: string | null
+          ativo?: boolean
+          client_id?: string | null
+          client_secret?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          nome: string
+          provider?: string
+          public_key?: string | null
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          ambiente?: string
+          api_key?: string | null
+          ativo?: boolean
+          client_id?: string | null
+          client_secret?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          provider?: string
+          public_key?: string | null
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_integrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           company_id: string
