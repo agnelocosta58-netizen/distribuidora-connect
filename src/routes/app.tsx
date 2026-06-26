@@ -4,7 +4,7 @@ import { useAuth, signOut } from "@/lib/auth";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Wallet, Boxes,
   Settings, LogOut, BarChart3, Tags, UserCog, Beer, Receipt,
-  Sparkles, Image as ImageIcon, Split, QrCode,
+  Sparkles, Image as ImageIcon, Split, QrCode, Banknote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
