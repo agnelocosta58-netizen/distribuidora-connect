@@ -82,7 +82,6 @@ function IntegracoesPage() {
 
       {items.length === 0 ? (
         <EmptyState
-          icon={Banknote}
           title="Nenhuma integração cadastrada"
           description="Cadastre as credenciais da API bancária para receber pagamentos."
           action={<Button onClick={() => setOpenNew(true)}>Cadastrar agora</Button>}

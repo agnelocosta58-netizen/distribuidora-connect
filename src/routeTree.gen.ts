@@ -22,6 +22,7 @@ import { Route as AppPixRouteImport } from './routes/app.pix'
 import { Route as AppPdvRouteImport } from './routes/app.pdv'
 import { Route as AppMarketingRouteImport } from './routes/app.marketing'
 import { Route as AppInteligenciaRouteImport } from './routes/app.inteligencia'
+import { Route as AppIntegracoesBancariasRouteImport } from './routes/app.integracoes-bancarias'
 import { Route as AppFinanceiroRouteImport } from './routes/app.financeiro'
 import { Route as AppEstoqueRouteImport } from './routes/app.estoque'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
@@ -95,6 +96,11 @@ const AppInteligenciaRoute = AppInteligenciaRouteImport.update({
   path: '/inteligencia',
   getParentRoute: () => AppRoute,
 } as any)
+const AppIntegracoesBancariasRoute = AppIntegracoesBancariasRouteImport.update({
+  id: '/integracoes-bancarias',
+  path: '/integracoes-bancarias',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFinanceiroRoute = AppFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/estoque': typeof AppEstoqueRoute
   '/app/financeiro': typeof AppFinanceiroRoute
+  '/app/integracoes-bancarias': typeof AppIntegracoesBancariasRoute
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/marketing': typeof AppMarketingRoute
   '/app/pdv': typeof AppPdvRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/estoque': typeof AppEstoqueRoute
   '/app/financeiro': typeof AppFinanceiroRoute
+  '/app/integracoes-bancarias': typeof AppIntegracoesBancariasRoute
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/marketing': typeof AppMarketingRoute
   '/app/pdv': typeof AppPdvRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/estoque': typeof AppEstoqueRoute
   '/app/financeiro': typeof AppFinanceiroRoute
+  '/app/integracoes-bancarias': typeof AppIntegracoesBancariasRoute
   '/app/inteligencia': typeof AppInteligenciaRoute
   '/app/marketing': typeof AppMarketingRoute
   '/app/pdv': typeof AppPdvRoute
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/app/configuracoes'
     | '/app/estoque'
     | '/app/financeiro'
+    | '/app/integracoes-bancarias'
     | '/app/inteligencia'
     | '/app/marketing'
     | '/app/pdv'
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
     | '/app/configuracoes'
     | '/app/estoque'
     | '/app/financeiro'
+    | '/app/integracoes-bancarias'
     | '/app/inteligencia'
     | '/app/marketing'
     | '/app/pdv'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/app/configuracoes'
     | '/app/estoque'
     | '/app/financeiro'
+    | '/app/integracoes-bancarias'
     | '/app/inteligencia'
     | '/app/marketing'
     | '/app/pdv'
@@ -366,6 +378,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInteligenciaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/integracoes-bancarias': {
+      id: '/app/integracoes-bancarias'
+      path: '/integracoes-bancarias'
+      fullPath: '/app/integracoes-bancarias'
+      preLoaderRoute: typeof AppIntegracoesBancariasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/financeiro': {
       id: '/app/financeiro'
       path: '/financeiro'
@@ -425,6 +444,7 @@ interface AppRouteChildren {
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppEstoqueRoute: typeof AppEstoqueRoute
   AppFinanceiroRoute: typeof AppFinanceiroRoute
+  AppIntegracoesBancariasRoute: typeof AppIntegracoesBancariasRoute
   AppInteligenciaRoute: typeof AppInteligenciaRoute
   AppMarketingRoute: typeof AppMarketingRoute
   AppPdvRoute: typeof AppPdvRoute
@@ -443,6 +463,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppEstoqueRoute: AppEstoqueRoute,
   AppFinanceiroRoute: AppFinanceiroRoute,
+  AppIntegracoesBancariasRoute: AppIntegracoesBancariasRoute,
   AppInteligenciaRoute: AppInteligenciaRoute,
   AppMarketingRoute: AppMarketingRoute,
   AppPdvRoute: AppPdvRoute,
