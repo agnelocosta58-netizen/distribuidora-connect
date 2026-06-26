@@ -32,6 +32,7 @@ const NAV: NavItem[] = [
   { to: "/app/inteligencia", label: "IA & Promoções", icon: Sparkles, roles: ["admin", "gerente"] },
   { to: "/app/relatorios", label: "Relatórios", icon: BarChart3, roles: ["admin", "gerente"] },
   { to: "/app/pix", label: "Pix", icon: QrCode, roles: ["admin", "gerente"] },
+  { to: "/app/integracoes-bancarias", label: "Integrações bancárias", icon: Banknote, roles: ["admin"] },
   { to: "/app/vendedores", label: "Vendedores", icon: UserCog, roles: ["admin"] },
   { to: "/app/configuracoes", label: "Configurações", icon: Settings, roles: ["admin"] },
 ];
