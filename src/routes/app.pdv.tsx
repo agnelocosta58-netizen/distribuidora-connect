@@ -41,10 +41,20 @@ function PdvPage() {
   const { data: products = [] } = useQuery({
     queryKey: ["products-pdv", auth.company?.id],
     enabled: !!auth.company?.id,
-    queryFn: async () => (await supabase.from("products")
-      .select("id, nome, preco_venda, codigo_barras, estoque, unidade, imagem_url, product_variants(id, nome, codigo_barras, preco_venda, estoque, ativo)")
-      .eq("ativo", true).order("nome")).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("products")
+        .select("id, nome, preco_venda, codigo_barras, estoque, unidade, imagem_url, product_variants(id, tipo, temperatura, unidades_por_pacote, codigo_barras, preco_venda, estoque, ativo)")
+        .eq("ativo", true).order("nome");
+      if (error) { toast.error("Erro ao carregar produtos: " + error.message); return []; }
+      return data ?? [];
+    },
   });
+
+  function variantLabel(v: any) {
+    const parts = [v.tipo, v.temperatura].filter(Boolean);
+    if (v.unidades_por_pacote && Number(v.unidades_por_pacote) > 1) parts.push(`${v.unidades_por_pacote}un`);
+    return parts.join(" · ") || "Variação";
+  }
 
   const filtered = useMemo(() => {
     if (!q) return (products as any[]).slice(0, 40);
@@ -89,8 +99,9 @@ function PdvPage() {
       if (p.codigo_barras === code) { clickProduct(p); toast.success(`Adicionado: ${p.nome}`); return; }
       const v = ((p.product_variants ?? []) as any[]).find((vv) => vv.codigo_barras === code && vv.ativo);
       if (v) {
-        addCart({ product_id: p.id, variant_id: v.id, nome: `${p.nome} — ${v.nome}`, preco: Number(v.preco_venda), qtd: 1 });
-        toast.success(`Adicionado: ${p.nome} — ${v.nome}`);
+        const label = variantLabel(v);
+        addCart({ product_id: p.id, variant_id: v.id, nome: `${p.nome} — ${label}`, preco: Number(v.preco_venda), qtd: 1 });
+        toast.success(`Adicionado: ${p.nome} — ${label}`);
         return;
       }
     }
@@ -196,14 +207,15 @@ function PdvPage() {
       <BarcodeScanner open={scanOpen} onOpenChange={setScanOpen} onDetected={handleScannedCode} title="Adicionar produto ao carrinho" />
 
       <VariantPickDialog product={variantPick} onClose={() => setVariantPick(null)} onPick={(v) => {
-        addCart({ product_id: variantPick.id, variant_id: v.id, nome: `${variantPick.nome} — ${v.nome}`, preco: Number(v.preco_venda), qtd: 1 });
+        const label = variantLabel(v);
+        addCart({ product_id: variantPick.id, variant_id: v.id, nome: `${variantPick.nome} — ${label}`, preco: Number(v.preco_venda), qtd: 1 });
         setVariantPick(null);
-      }} />
+      }} variantLabel={variantLabel} />
     </div>
   );
 }
 
-function VariantPickDialog({ product, onClose, onPick }: { product: any; onClose: () => void; onPick: (v: any) => void }) {
+function VariantPickDialog({ product, onClose, onPick, variantLabel }: { product: any; onClose: () => void; onPick: (v: any) => void; variantLabel: (v: any) => string }) {
   if (!product) return null;
   const variants = (product.product_variants ?? []).filter((v: any) => v.ativo);
   return (
@@ -214,7 +226,7 @@ function VariantPickDialog({ product, onClose, onPick }: { product: any; onClose
           {variants.map((v: any) => (
             <button key={v.id} disabled={Number(v.estoque) <= 0} onClick={() => onPick(v)}
               className="p-3 rounded-lg border border-border hover:border-primary text-left disabled:opacity-50">
-              <div className="font-medium">{v.nome}</div>
+              <div className="font-medium">{variantLabel(v)}</div>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-primary font-bold">{brl(v.preco_venda)}</span>
                 <span className="text-xs text-muted-foreground">est. {Number(v.estoque)}</span>
