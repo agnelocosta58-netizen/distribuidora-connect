@@ -99,8 +99,9 @@ function PdvPage() {
       if (p.codigo_barras === code) { clickProduct(p); toast.success(`Adicionado: ${p.nome}`); return; }
       const v = ((p.product_variants ?? []) as any[]).find((vv) => vv.codigo_barras === code && vv.ativo);
       if (v) {
-        addCart({ product_id: p.id, variant_id: v.id, nome: `${p.nome} — ${v.nome}`, preco: Number(v.preco_venda), qtd: 1 });
-        toast.success(`Adicionado: ${p.nome} — ${v.nome}`);
+        const label = variantLabel(v);
+        addCart({ product_id: p.id, variant_id: v.id, nome: `${p.nome} — ${label}`, preco: Number(v.preco_venda), qtd: 1 });
+        toast.success(`Adicionado: ${p.nome} — ${label}`);
         return;
       }
     }
