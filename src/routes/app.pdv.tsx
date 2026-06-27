@@ -207,9 +207,15 @@ function PdvPage() {
       <BarcodeScanner open={scanOpen} onOpenChange={setScanOpen} onDetected={handleScannedCode} title="Adicionar produto ao carrinho" />
 
       <VariantPickDialog product={variantPick} onClose={() => setVariantPick(null)} onPick={(v) => {
-        addCart({ product_id: variantPick.id, variant_id: v.id, nome: `${variantPick.nome} — ${v.nome}`, preco: Number(v.preco_venda), qtd: 1 });
+        const label = variantLabel(v);
+        addCart({ product_id: variantPick.id, variant_id: v.id, nome: `${variantPick.nome} — ${label}`, preco: Number(v.preco_venda), qtd: 1 });
         setVariantPick(null);
-      }} />
+      }} variantLabel={variantLabel} />
+    </div>
+  );
+}
+
+function VariantPickDialog({ product, onClose, onPick, variantLabel }: { product: any; onClose: () => void; onPick: (v: any) => void; variantLabel: (v: any) => string }) {
     </div>
   );
 }
