@@ -216,11 +216,6 @@ function PdvPage() {
 }
 
 function VariantPickDialog({ product, onClose, onPick, variantLabel }: { product: any; onClose: () => void; onPick: (v: any) => void; variantLabel: (v: any) => string }) {
-    </div>
-  );
-}
-
-function VariantPickDialog({ product, onClose, onPick }: { product: any; onClose: () => void; onPick: (v: any) => void }) {
   if (!product) return null;
   const variants = (product.product_variants ?? []).filter((v: any) => v.ativo);
   return (
@@ -231,7 +226,7 @@ function VariantPickDialog({ product, onClose, onPick }: { product: any; onClose
           {variants.map((v: any) => (
             <button key={v.id} disabled={Number(v.estoque) <= 0} onClick={() => onPick(v)}
               className="p-3 rounded-lg border border-border hover:border-primary text-left disabled:opacity-50">
-              <div className="font-medium">{v.nome}</div>
+              <div className="font-medium">{variantLabel(v)}</div>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-primary font-bold">{brl(v.preco_venda)}</span>
                 <span className="text-xs text-muted-foreground">est. {Number(v.estoque)}</span>
