@@ -301,3 +301,111 @@ function StockMoveDialog({ product, onClose, companyId, onSaved }: any) {
     </Dialog>
   );
 }
+
+type Variant = {
+  id?: string;
+  product_id?: string;
+  company_id?: string;
+  tipo: "unidade" | "fardo" | "caixa";
+  temperatura: "quente" | "gelado";
+  unidades_por_pacote?: number;
+  codigo_barras?: string | null;
+  estoque?: number;
+  estoque_minimo?: number;
+  preco_custo?: number;
+  preco_venda?: number;
+  ativo?: boolean;
+};
+
+function VariantsSection({ productId, companyId }: { productId: string; companyId: string }) {
+  const PACK = ["unidade", "fardo", "caixa"] as const;
+  const TEMP = ["quente", "gelado"] as const;
+  const [items, setItems] = useState<Record<string, Variant>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  async function load() {
+    setLoading(true);
+    const { data } = await supabase.from("product_variants").select("*").eq("product_id", productId);
+    const map: Record<string, Variant> = {};
+    for (const v of (data ?? []) as Variant[]) map[`${v.tipo}:${v.temperatura}`] = v;
+    setItems(map);
+    setLoading(false);
+  }
+  useEffect(() => { void load(); }, [productId]);
+
+  const key = (t: string, te: string) => `${t}:${te}`;
+  function patch(t: string, te: string, p: Partial<Variant>) {
+    setItems((s) => ({ ...s, [key(t, te)]: { ...(s[key(t, te)] ?? {} as Variant), tipo: t as any, temperatura: te as any, ...p } }));
+  }
+
+  async function save() {
+    setSaving(true);
+    const upserts: any[] = [];
+    const deletes: string[] = [];
+    for (const k of Object.keys(items)) {
+      const it = items[k];
+      if (!it.ativo && it.id) { deletes.push(it.id); continue; }
+      if (!it.ativo) continue;
+      upserts.push({
+        id: it.id,
+        company_id: companyId,
+        product_id: productId,
+        tipo: it.tipo,
+        temperatura: it.temperatura,
+        unidades_por_pacote: Number(it.unidades_por_pacote ?? 1),
+        codigo_barras: it.codigo_barras || null,
+        estoque: Number(it.estoque ?? 0),
+        estoque_minimo: Number(it.estoque_minimo ?? 0),
+        preco_custo: Number(it.preco_custo ?? 0),
+        preco_venda: Number(it.preco_venda ?? 0),
+        ativo: true,
+      });
+    }
+    if (deletes.length) {
+      const { error } = await supabase.from("product_variants").delete().in("id", deletes);
+      if (error) { setSaving(false); return toast.error(error.message); }
+    }
+    if (upserts.length) {
+      const { error } = await supabase.from("product_variants").upsert(upserts, { onConflict: "product_id,tipo,temperatura" });
+      if (error) { setSaving(false); return toast.error(error.message); }
+    }
+    setSaving(false);
+    toast.success("Variações salvas");
+    await load();
+  }
+
+  if (loading) return <div className="text-sm text-muted-foreground">Carregando variações…</div>;
+
+  return (
+    <div className="space-y-2">
+      {PACK.map((t) => TEMP.map((te) => {
+        const it = items[key(t, te)] ?? ({} as Variant);
+        return (
+          <Card key={`${t}-${te}`} className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-medium capitalize flex items-center gap-2 text-sm">
+                {te === "gelado" ? <Snowflake className="h-4 w-4 text-sky-500" /> : <Flame className="h-4 w-4 text-orange-500" />}
+                {t} — {te}
+              </div>
+              <div className="flex items-center gap-2"><Label className="text-xs">Ativo</Label><Switch checked={!!it.ativo} onCheckedChange={(c) => patch(t, te, { ativo: c })} /></div>
+            </div>
+            {it.ativo && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                <div><Label className="text-xs">Estoque</Label><Input type="number" step="0.001" value={it.estoque ?? 0} onChange={(e) => patch(t, te, { estoque: Number(e.target.value) })} /></div>
+                <div><Label className="text-xs">Mínimo</Label><Input type="number" step="0.001" value={it.estoque_minimo ?? 0} onChange={(e) => patch(t, te, { estoque_minimo: Number(e.target.value) })} /></div>
+                <div><Label className="text-xs">Un./pacote</Label><Input type="number" value={it.unidades_por_pacote ?? 1} onChange={(e) => patch(t, te, { unidades_por_pacote: Number(e.target.value) })} /></div>
+                <div><Label className="text-xs">Custo</Label><Input type="number" step="0.01" value={it.preco_custo ?? 0} onChange={(e) => patch(t, te, { preco_custo: Number(e.target.value) })} /></div>
+                <div><Label className="text-xs">Venda</Label><Input type="number" step="0.01" value={it.preco_venda ?? 0} onChange={(e) => patch(t, te, { preco_venda: Number(e.target.value) })} /></div>
+                <div className="col-span-2 sm:col-span-1"><Label className="text-xs">Cód. barras</Label><Input value={it.codigo_barras ?? ""} onChange={(e) => patch(t, te, { codigo_barras: e.target.value })} /></div>
+              </div>
+            )}
+          </Card>
+        );
+      }))}
+      <div className="flex justify-end">
+        <Button type="button" variant="secondary" onClick={save} disabled={saving}>{saving ? "Salvando…" : "Salvar variações"}</Button>
+      </div>
+    </div>
+  );
+}
