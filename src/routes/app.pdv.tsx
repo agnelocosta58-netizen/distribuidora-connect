@@ -41,10 +41,20 @@ function PdvPage() {
   const { data: products = [] } = useQuery({
     queryKey: ["products-pdv", auth.company?.id],
     enabled: !!auth.company?.id,
-    queryFn: async () => (await supabase.from("products")
-      .select("id, nome, preco_venda, codigo_barras, estoque, unidade, imagem_url, product_variants(id, nome, codigo_barras, preco_venda, estoque, ativo)")
-      .eq("ativo", true).order("nome")).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("products")
+        .select("id, nome, preco_venda, codigo_barras, estoque, unidade, imagem_url, product_variants(id, tipo, temperatura, unidades_por_pacote, codigo_barras, preco_venda, estoque, ativo)")
+        .eq("ativo", true).order("nome");
+      if (error) { toast.error("Erro ao carregar produtos: " + error.message); return []; }
+      return data ?? [];
+    },
   });
+
+  function variantLabel(v: any) {
+    const parts = [v.tipo, v.temperatura].filter(Boolean);
+    if (v.unidades_por_pacote && Number(v.unidades_por_pacote) > 1) parts.push(`${v.unidades_por_pacote}un`);
+    return parts.join(" · ") || "Variação";
+  }
 
   const filtered = useMemo(() => {
     if (!q) return (products as any[]).slice(0, 40);
