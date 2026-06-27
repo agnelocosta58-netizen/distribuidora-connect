@@ -245,6 +245,16 @@ function ProductDialog({ open, onOpenChange, editing, categories, brands, suppli
           <div className="space-y-1.5"><Label>Preço de venda *</Label><Input required type="number" step="0.01" value={form.preco_venda} onChange={(e) => setForm({ ...form, preco_venda: e.target.value })} /></div>
           <div className="space-y-1.5"><Label>Validade</Label><Input type="date" value={form.validade ?? ""} onChange={(e) => setForm({ ...form, validade: e.target.value })} /></div>
           <div className="col-span-2 space-y-1.5"><Label>Descrição</Label><Textarea rows={2} value={form.descricao ?? ""} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></div>
+          {isEdit && (
+            <div className="col-span-2 border-t pt-3 mt-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Layers className="h-4 w-4 text-primary" />
+                <Label className="text-base">Variações (embalagem & temperatura)</Label>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">Cada variação tem estoque, preço e código de barras independentes. A baixa de estoque na venda ocorre apenas na variação escolhida.</p>
+              <VariantsSection productId={editing.id} companyId={companyId} />
+            </div>
+          )}
           <DialogFooter className="col-span-2"><Button type="submit">Salvar</Button></DialogFooter>
         </form>
       </DialogContent>
