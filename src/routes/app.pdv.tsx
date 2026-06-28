@@ -313,16 +313,30 @@ function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acresc
     } catch (e: any) { toast.error(e.message); } finally { setLoading(false); }
   }
 
+  function buildReceipt(sale: any, pagamento: { metodo: string; recebido?: number; troco?: number }) {
+    const cust = (customers as any[]).find((c) => c.id === customerId);
+    return {
+      numero: sale.numero,
+      data: new Date().toISOString(),
+      company: { nome: auth.company?.nome ?? "", telefone: (auth.company as any)?.telefone ?? "", endereco: (auth.company as any)?.endereco ?? "", cnpj: (auth.company as any)?.cnpj ?? "" },
+      vendedor: auth.profile?.nome ?? "",
+      cliente: cust?.nome ?? null,
+      itens: cart.map((i: CartItem) => ({ nome: i.nome, qtd: i.qtd, preco: i.preco, total: i.preco * i.qtd })),
+      subtotal, desconto, acrescimo, total,
+      pagamento,
+    };
+  }
+
   async function finalize() {
     if (metodo === "fiado" && !customerId) return toast.error("Selecione um cliente para venda fiada");
 
     if (metodo === "pix") {
       if (!pixTx) return startPix();
       if (!paid) return toast.error("Aguardando confirmação do pagamento Pix");
-      // Already marked concluida by webhook; just register payment
       await supabase.from("sale_payments").insert({ company_id: companyId, sale_id: saleId!, metodo: "pix", valor: total, troco: 0 });
+      const { data: sale } = await supabase.from("sales").select("numero").eq("id", saleId!).maybeSingle();
       toast.success(`Venda Pix concluída!`);
-      onDone();
+      setReceipt(buildReceipt({ numero: sale?.numero }, { metodo: "pix" }));
       return;
     }
 
@@ -338,7 +352,7 @@ function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acresc
         });
       }
       toast.success(`Venda #${sale.numero} concluída!`);
-      onDone();
+      setReceipt(buildReceipt(sale, { metodo, recebido: metodo === "dinheiro" ? Number(recebido) : undefined, troco: metodo === "dinheiro" ? troco : undefined }));
     } catch (e: any) { toast.error(e.message); } finally { setLoading(false); }
   }
 
@@ -347,8 +361,13 @@ function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acresc
   }
 
   function close() {
-    setPixTx(null); setPaid(false); setSaleId(null); setMetodo("dinheiro"); setRecebido(0); setCustomerId("");
+    setPixTx(null); setPaid(false); setSaleId(null); setMetodo("dinheiro"); setRecebido(0); setCustomerId(""); setReceipt(null);
     onClose();
+  }
+
+  function finishReceipt() {
+    setReceipt(null);
+    onDone();
   }
 
   return (
