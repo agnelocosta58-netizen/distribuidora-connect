@@ -182,8 +182,9 @@ function ProductDialog({ open, onOpenChange, editing, categories, brands, suppli
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    const { categories: _c, brands: _b, suppliers: _s, id: _id, created_at: _ca, updated_at: _ua, ...rest } = form as any;
     const payload = {
-      ...form,
+      ...rest,
       company_id: companyId,
       category_id: form.category_id || null,
       brand_id: form.brand_id || null,
