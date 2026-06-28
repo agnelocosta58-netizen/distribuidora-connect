@@ -252,10 +252,12 @@ function VariantPickDialog({ product, onClose, onPick, variantLabel }: { product
 }
 
 function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acrescimo, companyId, userId, onDone }: any) {
+  const auth = useAuth();
   const [metodo, setMetodo] = useState<"dinheiro" | "pix" | "debito" | "credito" | "fiado">("dinheiro");
   const [recebido, setRecebido] = useState(0);
   const [customerId, setCustomerId] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [receipt, setReceipt] = useState<any | null>(null);
 
   // Pix MP state
   const createCharge = useServerFn(createPixCharge);
