@@ -347,8 +347,7 @@ function VariantsSection({ productId, companyId }: { productId: string; companyI
       const it = items[k];
       if (!it.ativo && it.id) { deletes.push(it.id); continue; }
       if (!it.ativo) continue;
-      upserts.push({
-        id: it.id,
+      const row: any = {
         company_id: companyId,
         product_id: productId,
         tipo: it.tipo,
@@ -360,7 +359,9 @@ function VariantsSection({ productId, companyId }: { productId: string; companyI
         preco_custo: Number(it.preco_custo ?? 0),
         preco_venda: Number(it.preco_venda ?? 0),
         ativo: true,
-      });
+      };
+      if (it.id) row.id = it.id;
+      upserts.push(row);
     }
     if (deletes.length) {
       const { error } = await supabase.from("product_variants").delete().in("id", deletes);
