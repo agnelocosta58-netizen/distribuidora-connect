@@ -437,3 +437,116 @@ function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acresc
     </Dialog>
   );
 }
+
+function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
+  function printReceipt() {
+    const w = window.open("", "_blank", "width=380,height=600");
+    if (!w) return;
+    const itens = data.itens.map((i: any) =>
+      `<tr><td>${i.qtd}x ${escapeHtml(i.nome)}</td><td style="text-align:right">${brl(i.total)}</td></tr>`
+    ).join("");
+    const pg = data.pagamento || {};
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Comprovante #${data.numero ?? ""}</title>
+      <style>
+        body{font-family:ui-monospace,Menlo,monospace;font-size:12px;padding:8px;color:#000}
+        h1,h2,h3{margin:4px 0}
+        table{width:100%;border-collapse:collapse;margin:6px 0}
+        td{padding:2px 0;vertical-align:top}
+        .center{text-align:center}
+        .row{display:flex;justify-content:space-between}
+        hr{border:none;border-top:1px dashed #000;margin:6px 0}
+        .tot{font-weight:700;font-size:14px}
+        @media print { @page { margin: 6mm; } }
+      </style></head><body>
+      <div class="center">
+        <h2>${escapeHtml(data.company.nome || "Distribuidora")}</h2>
+        ${data.company.cnpj ? `<div>CNPJ: ${escapeHtml(data.company.cnpj)}</div>` : ""}
+        ${data.company.endereco ? `<div>${escapeHtml(data.company.endereco)}</div>` : ""}
+        ${data.company.telefone ? `<div>Tel: ${escapeHtml(data.company.telefone)}</div>` : ""}
+      </div>
+      <hr/>
+      <div class="center"><strong>COMPROVANTE NÃO FISCAL</strong></div>
+      <div class="row"><span>Venda #${data.numero ?? "-"}</span><span>${new Date(data.data).toLocaleString("pt-BR")}</span></div>
+      ${data.vendedor ? `<div>Vendedor: ${escapeHtml(data.vendedor)}</div>` : ""}
+      ${data.cliente ? `<div>Cliente: ${escapeHtml(data.cliente)}</div>` : ""}
+      <hr/>
+      <table>${itens}</table>
+      <hr/>
+      <div class="row"><span>Subtotal</span><span>${brl(data.subtotal)}</span></div>
+      ${Number(data.desconto) ? `<div class="row"><span>Desconto</span><span>- ${brl(data.desconto)}</span></div>` : ""}
+      ${Number(data.acrescimo) ? `<div class="row"><span>Acréscimo</span><span>${brl(data.acrescimo)}</span></div>` : ""}
+      <div class="row tot"><span>TOTAL</span><span>${brl(data.total)}</span></div>
+      <hr/>
+      <div class="row"><span>Pagamento</span><span style="text-transform:capitalize">${escapeHtml(pg.metodo || "")}</span></div>
+      ${pg.recebido ? `<div class="row"><span>Recebido</span><span>${brl(pg.recebido)}</span></div>` : ""}
+      ${pg.troco ? `<div class="row"><span>Troco</span><span>${brl(pg.troco)}</span></div>` : ""}
+      <hr/>
+      <div class="center">Obrigado pela preferência!</div>
+      <script>window.onload=()=>{window.print();}</script>
+      </body></html>`);
+    w.document.close();
+  }
+
+  function shareWhats() {
+    const lines: string[] = [];
+    lines.push(`*${data.company.nome || "Distribuidora"}*`);
+    lines.push(`Comprovante de venda #${data.numero ?? "-"}`);
+    lines.push(new Date(data.data).toLocaleString("pt-BR"));
+    if (data.cliente) lines.push(`Cliente: ${data.cliente}`);
+    lines.push("");
+    for (const i of data.itens) lines.push(`${i.qtd}x ${i.nome} — ${brl(i.total)}`);
+    lines.push("");
+    if (Number(data.desconto)) lines.push(`Desconto: -${brl(data.desconto)}`);
+    if (Number(data.acrescimo)) lines.push(`Acréscimo: ${brl(data.acrescimo)}`);
+    lines.push(`*TOTAL: ${brl(data.total)}*`);
+    lines.push(`Pagamento: ${data.pagamento?.metodo ?? ""}`);
+    const url = `https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`;
+    window.open(url, "_blank");
+  }
+
+  const pg = data.pagamento || {};
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>Comprovante de venda</DialogTitle></DialogHeader>
+        <div className="rounded-lg border border-border bg-surface p-4 font-mono text-xs space-y-2">
+          <div className="text-center">
+            <div className="font-bold text-sm">{data.company.nome || "Distribuidora"}</div>
+            {data.company.cnpj && <div>CNPJ: {data.company.cnpj}</div>}
+            {data.company.endereco && <div>{data.company.endereco}</div>}
+            {data.company.telefone && <div>Tel: {data.company.telefone}</div>}
+          </div>
+          <div className="border-t border-dashed border-border" />
+          <div className="text-center font-semibold">COMPROVANTE NÃO FISCAL</div>
+          <div className="flex justify-between"><span>Venda #{data.numero ?? "-"}</span><span>{new Date(data.data).toLocaleString("pt-BR")}</span></div>
+          {data.vendedor && <div>Vendedor: {data.vendedor}</div>}
+          {data.cliente && <div>Cliente: {data.cliente}</div>}
+          <div className="border-t border-dashed border-border" />
+          <div className="space-y-0.5 max-h-48 overflow-y-auto">
+            {data.itens.map((i: any, idx: number) => (
+              <div key={idx} className="flex justify-between gap-2"><span className="truncate">{i.qtd}x {i.nome}</span><span>{brl(i.total)}</span></div>
+            ))}
+          </div>
+          <div className="border-t border-dashed border-border" />
+          <div className="flex justify-between"><span>Subtotal</span><span>{brl(data.subtotal)}</span></div>
+          {Number(data.desconto) > 0 && <div className="flex justify-between"><span>Desconto</span><span>- {brl(data.desconto)}</span></div>}
+          {Number(data.acrescimo) > 0 && <div className="flex justify-between"><span>Acréscimo</span><span>{brl(data.acrescimo)}</span></div>}
+          <div className="flex justify-between text-sm font-bold"><span>TOTAL</span><span>{brl(data.total)}</span></div>
+          <div className="border-t border-dashed border-border" />
+          <div className="flex justify-between capitalize"><span>Pagamento</span><span>{pg.metodo}</span></div>
+          {pg.recebido ? <div className="flex justify-between"><span>Recebido</span><span>{brl(pg.recebido)}</span></div> : null}
+          {pg.troco ? <div className="flex justify-between"><span>Troco</span><span>{brl(pg.troco)}</span></div> : null}
+        </div>
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button variant="outline" onClick={shareWhats}>WhatsApp</Button>
+          <Button variant="outline" onClick={printReceipt}>Imprimir</Button>
+          <Button onClick={onClose}>Concluir</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function escapeHtml(s: string) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
