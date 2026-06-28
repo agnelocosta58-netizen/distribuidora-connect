@@ -145,7 +145,11 @@ function PdvPage() {
                   <div className="text-xs text-muted-foreground">{p.unidade}{variants.length > 0 && ` · ${variants.length} variações`}</div>
                   <div className="font-medium text-sm line-clamp-2 min-h-[2.5em]">{p.nome}</div>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-primary font-bold">{brl(p.preco_venda)}</span>
+                    <span className="text-primary font-bold">
+                      {variants.length > 0
+                        ? `a partir de ${brl(Math.min(...variants.map((v) => Number(v.preco_venda) || Infinity)))}`
+                        : brl(p.preco_venda)}
+                    </span>
                     <span className="text-[11px] text-muted-foreground">est. {totalEstoque}</span>
                   </div>
                 </button>
