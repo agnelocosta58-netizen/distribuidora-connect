@@ -370,6 +370,10 @@ function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acresc
     onDone();
   }
 
+  if (receipt) {
+    return <ReceiptDialog data={receipt} onClose={finishReceipt} />;
+  }
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
       <DialogContent className="max-w-md">
