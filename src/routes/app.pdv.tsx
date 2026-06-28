@@ -59,7 +59,15 @@ function PdvPage() {
   const filtered = useMemo(() => {
     if (!q) return (products as any[]).slice(0, 40);
     const term = q.toLowerCase();
-    return (products as any[]).filter((p) => p.nome.toLowerCase().includes(term) || (p.codigo_barras ?? "").includes(q)).slice(0, 40);
+    return (products as any[]).filter((p) => {
+      if (p.nome.toLowerCase().includes(term)) return true;
+      if ((p.codigo_barras ?? "").includes(q)) return true;
+      const vs = (p.product_variants ?? []) as any[];
+      return vs.some((v) => v.ativo && (
+        (v.codigo_barras ?? "").includes(q) ||
+        variantLabel(v).toLowerCase().includes(term)
+      ));
+    }).slice(0, 40);
   }, [products, q]);
 
   function activeVariants(p: any) {
