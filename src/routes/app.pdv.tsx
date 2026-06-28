@@ -59,7 +59,15 @@ function PdvPage() {
   const filtered = useMemo(() => {
     if (!q) return (products as any[]).slice(0, 40);
     const term = q.toLowerCase();
-    return (products as any[]).filter((p) => p.nome.toLowerCase().includes(term) || (p.codigo_barras ?? "").includes(q)).slice(0, 40);
+    return (products as any[]).filter((p) => {
+      if (p.nome.toLowerCase().includes(term)) return true;
+      if ((p.codigo_barras ?? "").includes(q)) return true;
+      const vs = (p.product_variants ?? []) as any[];
+      return vs.some((v) => v.ativo && (
+        (v.codigo_barras ?? "").includes(q) ||
+        variantLabel(v).toLowerCase().includes(term)
+      ));
+    }).slice(0, 40);
   }, [products, q]);
 
   function activeVariants(p: any) {
@@ -137,7 +145,11 @@ function PdvPage() {
                   <div className="text-xs text-muted-foreground">{p.unidade}{variants.length > 0 && ` · ${variants.length} variações`}</div>
                   <div className="font-medium text-sm line-clamp-2 min-h-[2.5em]">{p.nome}</div>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-primary font-bold">{brl(p.preco_venda)}</span>
+                    <span className="text-primary font-bold">
+                      {variants.length > 0
+                        ? `a partir de ${brl(Math.min(...variants.map((v) => Number(v.preco_venda) || Infinity)))}`
+                        : brl(p.preco_venda)}
+                    </span>
                     <span className="text-[11px] text-muted-foreground">est. {totalEstoque}</span>
                   </div>
                 </button>
