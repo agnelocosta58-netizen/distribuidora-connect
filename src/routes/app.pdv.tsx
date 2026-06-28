@@ -252,10 +252,12 @@ function VariantPickDialog({ product, onClose, onPick, variantLabel }: { product
 }
 
 function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acrescimo, companyId, userId, onDone }: any) {
+  const auth = useAuth();
   const [metodo, setMetodo] = useState<"dinheiro" | "pix" | "debito" | "credito" | "fiado">("dinheiro");
   const [recebido, setRecebido] = useState(0);
   const [customerId, setCustomerId] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [receipt, setReceipt] = useState<any | null>(null);
 
   // Pix MP state
   const createCharge = useServerFn(createPixCharge);
@@ -311,16 +313,30 @@ function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acresc
     } catch (e: any) { toast.error(e.message); } finally { setLoading(false); }
   }
 
+  function buildReceipt(sale: any, pagamento: { metodo: string; recebido?: number; troco?: number }) {
+    const cust = (customers as any[]).find((c) => c.id === customerId);
+    return {
+      numero: sale.numero,
+      data: new Date().toISOString(),
+      company: { nome: auth.company?.nome ?? "", telefone: (auth.company as any)?.telefone ?? "", endereco: (auth.company as any)?.endereco ?? "", cnpj: (auth.company as any)?.cnpj ?? "" },
+      vendedor: auth.profile?.nome ?? "",
+      cliente: cust?.nome ?? null,
+      itens: cart.map((i: CartItem) => ({ nome: i.nome, qtd: i.qtd, preco: i.preco, total: i.preco * i.qtd })),
+      subtotal, desconto, acrescimo, total,
+      pagamento,
+    };
+  }
+
   async function finalize() {
     if (metodo === "fiado" && !customerId) return toast.error("Selecione um cliente para venda fiada");
 
     if (metodo === "pix") {
       if (!pixTx) return startPix();
       if (!paid) return toast.error("Aguardando confirmação do pagamento Pix");
-      // Already marked concluida by webhook; just register payment
       await supabase.from("sale_payments").insert({ company_id: companyId, sale_id: saleId!, metodo: "pix", valor: total, troco: 0 });
+      const { data: sale } = await supabase.from("sales").select("numero").eq("id", saleId!).maybeSingle();
       toast.success(`Venda Pix concluída!`);
-      onDone();
+      setReceipt(buildReceipt({ numero: sale?.numero }, { metodo: "pix" }));
       return;
     }
 
@@ -336,7 +352,7 @@ function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acresc
         });
       }
       toast.success(`Venda #${sale.numero} concluída!`);
-      onDone();
+      setReceipt(buildReceipt(sale, { metodo, recebido: metodo === "dinheiro" ? Number(recebido) : undefined, troco: metodo === "dinheiro" ? troco : undefined }));
     } catch (e: any) { toast.error(e.message); } finally { setLoading(false); }
   }
 
@@ -345,8 +361,17 @@ function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acresc
   }
 
   function close() {
-    setPixTx(null); setPaid(false); setSaleId(null); setMetodo("dinheiro"); setRecebido(0); setCustomerId("");
+    setPixTx(null); setPaid(false); setSaleId(null); setMetodo("dinheiro"); setRecebido(0); setCustomerId(""); setReceipt(null);
     onClose();
+  }
+
+  function finishReceipt() {
+    setReceipt(null);
+    onDone();
+  }
+
+  if (receipt) {
+    return <ReceiptDialog data={receipt} onClose={finishReceipt} />;
   }
 
   return (
@@ -411,4 +436,117 @@ function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acresc
       </DialogContent>
     </Dialog>
   );
+}
+
+function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
+  function printReceipt() {
+    const w = window.open("", "_blank", "width=380,height=600");
+    if (!w) return;
+    const itens = data.itens.map((i: any) =>
+      `<tr><td>${i.qtd}x ${escapeHtml(i.nome)}</td><td style="text-align:right">${brl(i.total)}</td></tr>`
+    ).join("");
+    const pg = data.pagamento || {};
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Comprovante #${data.numero ?? ""}</title>
+      <style>
+        body{font-family:ui-monospace,Menlo,monospace;font-size:12px;padding:8px;color:#000}
+        h1,h2,h3{margin:4px 0}
+        table{width:100%;border-collapse:collapse;margin:6px 0}
+        td{padding:2px 0;vertical-align:top}
+        .center{text-align:center}
+        .row{display:flex;justify-content:space-between}
+        hr{border:none;border-top:1px dashed #000;margin:6px 0}
+        .tot{font-weight:700;font-size:14px}
+        @media print { @page { margin: 6mm; } }
+      </style></head><body>
+      <div class="center">
+        <h2>${escapeHtml(data.company.nome || "Distribuidora")}</h2>
+        ${data.company.cnpj ? `<div>CNPJ: ${escapeHtml(data.company.cnpj)}</div>` : ""}
+        ${data.company.endereco ? `<div>${escapeHtml(data.company.endereco)}</div>` : ""}
+        ${data.company.telefone ? `<div>Tel: ${escapeHtml(data.company.telefone)}</div>` : ""}
+      </div>
+      <hr/>
+      <div class="center"><strong>COMPROVANTE NÃO FISCAL</strong></div>
+      <div class="row"><span>Venda #${data.numero ?? "-"}</span><span>${new Date(data.data).toLocaleString("pt-BR")}</span></div>
+      ${data.vendedor ? `<div>Vendedor: ${escapeHtml(data.vendedor)}</div>` : ""}
+      ${data.cliente ? `<div>Cliente: ${escapeHtml(data.cliente)}</div>` : ""}
+      <hr/>
+      <table>${itens}</table>
+      <hr/>
+      <div class="row"><span>Subtotal</span><span>${brl(data.subtotal)}</span></div>
+      ${Number(data.desconto) ? `<div class="row"><span>Desconto</span><span>- ${brl(data.desconto)}</span></div>` : ""}
+      ${Number(data.acrescimo) ? `<div class="row"><span>Acréscimo</span><span>${brl(data.acrescimo)}</span></div>` : ""}
+      <div class="row tot"><span>TOTAL</span><span>${brl(data.total)}</span></div>
+      <hr/>
+      <div class="row"><span>Pagamento</span><span style="text-transform:capitalize">${escapeHtml(pg.metodo || "")}</span></div>
+      ${pg.recebido ? `<div class="row"><span>Recebido</span><span>${brl(pg.recebido)}</span></div>` : ""}
+      ${pg.troco ? `<div class="row"><span>Troco</span><span>${brl(pg.troco)}</span></div>` : ""}
+      <hr/>
+      <div class="center">Obrigado pela preferência!</div>
+      <script>window.onload=()=>{window.print();}</script>
+      </body></html>`);
+    w.document.close();
+  }
+
+  function shareWhats() {
+    const lines: string[] = [];
+    lines.push(`*${data.company.nome || "Distribuidora"}*`);
+    lines.push(`Comprovante de venda #${data.numero ?? "-"}`);
+    lines.push(new Date(data.data).toLocaleString("pt-BR"));
+    if (data.cliente) lines.push(`Cliente: ${data.cliente}`);
+    lines.push("");
+    for (const i of data.itens) lines.push(`${i.qtd}x ${i.nome} — ${brl(i.total)}`);
+    lines.push("");
+    if (Number(data.desconto)) lines.push(`Desconto: -${brl(data.desconto)}`);
+    if (Number(data.acrescimo)) lines.push(`Acréscimo: ${brl(data.acrescimo)}`);
+    lines.push(`*TOTAL: ${brl(data.total)}*`);
+    lines.push(`Pagamento: ${data.pagamento?.metodo ?? ""}`);
+    const url = `https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`;
+    window.open(url, "_blank");
+  }
+
+  const pg = data.pagamento || {};
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>Comprovante de venda</DialogTitle></DialogHeader>
+        <div className="rounded-lg border border-border bg-surface p-4 font-mono text-xs space-y-2">
+          <div className="text-center">
+            <div className="font-bold text-sm">{data.company.nome || "Distribuidora"}</div>
+            {data.company.cnpj && <div>CNPJ: {data.company.cnpj}</div>}
+            {data.company.endereco && <div>{data.company.endereco}</div>}
+            {data.company.telefone && <div>Tel: {data.company.telefone}</div>}
+          </div>
+          <div className="border-t border-dashed border-border" />
+          <div className="text-center font-semibold">COMPROVANTE NÃO FISCAL</div>
+          <div className="flex justify-between"><span>Venda #{data.numero ?? "-"}</span><span>{new Date(data.data).toLocaleString("pt-BR")}</span></div>
+          {data.vendedor && <div>Vendedor: {data.vendedor}</div>}
+          {data.cliente && <div>Cliente: {data.cliente}</div>}
+          <div className="border-t border-dashed border-border" />
+          <div className="space-y-0.5 max-h-48 overflow-y-auto">
+            {data.itens.map((i: any, idx: number) => (
+              <div key={idx} className="flex justify-between gap-2"><span className="truncate">{i.qtd}x {i.nome}</span><span>{brl(i.total)}</span></div>
+            ))}
+          </div>
+          <div className="border-t border-dashed border-border" />
+          <div className="flex justify-between"><span>Subtotal</span><span>{brl(data.subtotal)}</span></div>
+          {Number(data.desconto) > 0 && <div className="flex justify-between"><span>Desconto</span><span>- {brl(data.desconto)}</span></div>}
+          {Number(data.acrescimo) > 0 && <div className="flex justify-between"><span>Acréscimo</span><span>{brl(data.acrescimo)}</span></div>}
+          <div className="flex justify-between text-sm font-bold"><span>TOTAL</span><span>{brl(data.total)}</span></div>
+          <div className="border-t border-dashed border-border" />
+          <div className="flex justify-between capitalize"><span>Pagamento</span><span>{pg.metodo}</span></div>
+          {pg.recebido ? <div className="flex justify-between"><span>Recebido</span><span>{brl(pg.recebido)}</span></div> : null}
+          {pg.troco ? <div className="flex justify-between"><span>Troco</span><span>{brl(pg.troco)}</span></div> : null}
+        </div>
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button variant="outline" onClick={shareWhats}>WhatsApp</Button>
+          <Button variant="outline" onClick={printReceipt}>Imprimir</Button>
+          <Button onClick={onClose}>Concluir</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function escapeHtml(s: string) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
