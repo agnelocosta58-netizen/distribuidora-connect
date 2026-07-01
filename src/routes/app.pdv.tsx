@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -439,18 +439,19 @@ function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acresc
 }
 
 function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
-  function printReceipt() {
-    const w = window.open("", "_blank", "width=280,height=600");
-    if (!w) return;
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  function buildReceiptHtml() {
     const itens = data.itens.map((i: any) =>
       `<tr><td>${i.qtd}x ${escapeHtml(i.nome)}</td><td style="text-align:right">${brl(i.total)}</td></tr>`
     ).join("");
     const pg = data.pagamento || {};
-    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Comprovante #${data.numero ?? ""}</title>
+    return `<!doctype html><html><head><meta charset="utf-8"><title>Comprovante #${data.numero ?? ""}</title>
       <style>
         @page { size: 58mm auto; margin: 0; }
         html,body{width:58mm}
-        body{font-family:ui-monospace,Menlo,monospace;font-size:11px;padding:2mm;color:#000;margin:0}
+        body{font-family:ui-monospace,Menlo,monospace;font-size:11px;padding:2mm;color:#000;margin:0;background:#fff}
         h1,h2,h3{margin:2px 0;font-size:12px}
         table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}
         td{padding:1px 0;vertical-align:top;word-break:break-word}
@@ -460,7 +461,6 @@ function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
         .tot{font-weight:700;font-size:13px}
         @media print { @page { size: 58mm auto; margin: 0; } body{padding:2mm} }
       </style></head><body>
-
       <div class="center">
         <h2>${escapeHtml(data.company.nome || "Distribuidora")}</h2>
         ${data.company.cnpj ? `<div>CNPJ: ${escapeHtml(data.company.cnpj)}</div>` : ""}
@@ -485,10 +485,36 @@ function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
       ${pg.troco ? `<div class="row"><span>Troco</span><span>${brl(pg.troco)}</span></div>` : ""}
       <hr/>
       <div class="center">Obrigado pela preferência!</div>
-      <script>window.onload=()=>{window.print();}</script>
-      </body></html>`);
+      </body></html>`;
+  }
+
+  useEffect(() => {
+    if (!previewOpen) return;
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    const doc = iframe.contentDocument;
+    if (!doc) return;
+    doc.open();
+    doc.write(buildReceiptHtml());
+    doc.close();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewOpen]);
+
+  function printFromPreview() {
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+    win.focus();
+    win.print();
+  }
+
+  function openPrintWindow() {
+    const w = window.open("", "_blank", "width=320,height=640");
+    if (!w) return;
+    w.document.write(buildReceiptHtml().replace("</body></html>", `<script>window.onload=()=>{window.print();}</script></body></html>`));
     w.document.close();
   }
+
+
 
   function shareWhats() {
     const lines: string[] = [];
@@ -542,13 +568,39 @@ function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
         </div>
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="outline" onClick={shareWhats}>WhatsApp</Button>
-          <Button variant="outline" onClick={printReceipt}>Imprimir</Button>
+          <Button variant="outline" onClick={() => setPreviewOpen(true)}>Visualizar e imprimir</Button>
           <Button onClick={onClose}>Concluir</Button>
         </DialogFooter>
       </DialogContent>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Prévia do comprovante (58mm)</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <div className="rounded-md border border-border bg-white p-2 shadow-inner">
+              <iframe
+                ref={iframeRef}
+                title="Prévia 58mm"
+                style={{ width: "58mm", height: "420px", border: "0", background: "#fff" }}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            Confira margens, fonte e quebras antes de imprimir.
+          </p>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={openPrintWindow}>Abrir em nova janela</Button>
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>Fechar</Button>
+            <Button onClick={printFromPreview}>Imprimir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
+
 
 function escapeHtml(s: string) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
