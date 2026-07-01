@@ -440,7 +440,7 @@ function CheckoutDialog({ open, onClose, cart, total, subtotal, desconto, acresc
 
 function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
   function printReceipt() {
-    const w = window.open("", "_blank", "width=380,height=600");
+    const w = window.open("", "_blank", "width=280,height=600");
     if (!w) return;
     const itens = data.itens.map((i: any) =>
       `<tr><td>${i.qtd}x ${escapeHtml(i.nome)}</td><td style="text-align:right">${brl(i.total)}</td></tr>`
@@ -448,16 +448,19 @@ function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
     const pg = data.pagamento || {};
     w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Comprovante #${data.numero ?? ""}</title>
       <style>
-        body{font-family:ui-monospace,Menlo,monospace;font-size:12px;padding:8px;color:#000}
-        h1,h2,h3{margin:4px 0}
-        table{width:100%;border-collapse:collapse;margin:6px 0}
-        td{padding:2px 0;vertical-align:top}
+        @page { size: 58mm auto; margin: 0; }
+        html,body{width:58mm}
+        body{font-family:ui-monospace,Menlo,monospace;font-size:11px;padding:2mm;color:#000;margin:0}
+        h1,h2,h3{margin:2px 0;font-size:12px}
+        table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}
+        td{padding:1px 0;vertical-align:top;word-break:break-word}
         .center{text-align:center}
-        .row{display:flex;justify-content:space-between}
-        hr{border:none;border-top:1px dashed #000;margin:6px 0}
-        .tot{font-weight:700;font-size:14px}
-        @media print { @page { margin: 6mm; } }
+        .row{display:flex;justify-content:space-between;gap:4px}
+        hr{border:none;border-top:1px dashed #000;margin:4px 0}
+        .tot{font-weight:700;font-size:13px}
+        @media print { @page { size: 58mm auto; margin: 0; } body{padding:2mm} }
       </style></head><body>
+
       <div class="center">
         <h2>${escapeHtml(data.company.nome || "Distribuidora")}</h2>
         ${data.company.cnpj ? `<div>CNPJ: ${escapeHtml(data.company.cnpj)}</div>` : ""}
