@@ -625,8 +625,10 @@ function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
           {pg.recebido ? <div className="flex justify-between"><span>Recebido</span><span>{brl(pg.recebido)}</span></div> : null}
           {pg.troco ? <div className="flex justify-between"><span>Troco</span><span>{brl(pg.troco)}</span></div> : null}
         </div>
-        <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="outline" onClick={shareWhats}>WhatsApp</Button>
+        <DialogFooter className="flex-wrap gap-2 sm:gap-2">
+          <Button variant="outline" onClick={shareWhats}>WhatsApp (texto)</Button>
+          <Button variant="outline" onClick={shareImage}>Enviar imagem</Button>
+          <Button variant="outline" onClick={sharePdf}>Enviar PDF</Button>
           <Button variant="outline" onClick={() => setPreviewOpen(true)}>Visualizar e imprimir</Button>
           <Button onClick={onClose}>Concluir</Button>
         </DialogFooter>
@@ -647,15 +649,18 @@ function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            Confira margens, fonte e quebras antes de imprimir.
+            Confira margens, fonte e quebras antes de imprimir ou compartilhar.
           </p>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={openPrintWindow}>Abrir em nova janela</Button>
+          <DialogFooter className="flex-wrap gap-2 sm:gap-2">
+            <Button variant="outline" onClick={shareImage}>Compartilhar imagem</Button>
+            <Button variant="outline" onClick={sharePdf}>Compartilhar PDF</Button>
+            <Button variant="outline" onClick={openPrintWindow}>Nova janela</Button>
             <Button variant="outline" onClick={() => setPreviewOpen(false)}>Fechar</Button>
             <Button onClick={printFromPreview}>Imprimir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </Dialog>
   );
 }
