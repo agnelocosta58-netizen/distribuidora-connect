@@ -568,13 +568,39 @@ function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
         </div>
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="outline" onClick={shareWhats}>WhatsApp</Button>
-          <Button variant="outline" onClick={printReceipt}>Imprimir</Button>
+          <Button variant="outline" onClick={() => setPreviewOpen(true)}>Visualizar e imprimir</Button>
           <Button onClick={onClose}>Concluir</Button>
         </DialogFooter>
       </DialogContent>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Prévia do comprovante (58mm)</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <div className="rounded-md border border-border bg-white p-2 shadow-inner">
+              <iframe
+                ref={iframeRef}
+                title="Prévia 58mm"
+                style={{ width: "58mm", height: "420px", border: "0", background: "#fff" }}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            Confira margens, fonte e quebras antes de imprimir.
+          </p>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={openPrintWindow}>Abrir em nova janela</Button>
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>Fechar</Button>
+            <Button onClick={printFromPreview}>Imprimir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
+
 
 function escapeHtml(s: string) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
