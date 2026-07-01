@@ -514,7 +514,65 @@ function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
     w.document.close();
   }
 
+  async function renderReceiptCanvas(): Promise<HTMLCanvasElement | null> {
+    const body = iframeRef.current?.contentDocument?.body;
+    if (!body) return null;
+    const html2canvas = (await import("html2canvas")).default;
+    return html2canvas(body, { backgroundColor: "#ffffff", scale: 2, useCORS: true });
+  }
 
+  async function shareOrDownload(blob: Blob, filename: string, mime: string, text: string) {
+    const file = new File([blob], filename, { type: mime });
+    const nav: any = navigator;
+    if (nav.canShare && nav.canShare({ files: [file] })) {
+      try {
+        await nav.share({ files: [file], text, title: `Comprovante #${data.numero ?? ""}` });
+        return;
+      } catch (e: any) {
+        if (e?.name === "AbortError") return;
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    window.open(`https://wa.me/?text=${encodeURIComponent(text + "\n\n(Anexe o arquivo baixado)")}`, "_blank");
+  }
+
+  function receiptSummaryText() {
+    const lines: string[] = [];
+    lines.push(`*${data.company.nome || "Distribuidora"}*`);
+    lines.push(`Comprovante de venda #${data.numero ?? "-"}`);
+    lines.push(new Date(data.data).toLocaleString("pt-BR"));
+    if (data.cliente) lines.push(`Cliente: ${data.cliente}`);
+    lines.push(`*TOTAL: ${brl(data.total)}*`);
+    return lines.join("\n");
+  }
+
+  async function shareImage() {
+    if (!previewOpen) setPreviewOpen(true);
+    await new Promise((r) => setTimeout(r, 350));
+    const canvas = await renderReceiptCanvas();
+    if (!canvas) return;
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      await shareOrDownload(blob, `comprovante-${data.numero ?? Date.now()}.png`, "image/png", receiptSummaryText());
+    }, "image/png");
+  }
+
+  async function sharePdf() {
+    if (!previewOpen) setPreviewOpen(true);
+    await new Promise((r) => setTimeout(r, 350));
+    const canvas = await renderReceiptCanvas();
+    if (!canvas) return;
+    const { jsPDF } = await import("jspdf");
+    const widthMm = 58;
+    const heightMm = (canvas.height / canvas.width) * widthMm;
+    const pdf = new jsPDF({ unit: "mm", format: [widthMm, heightMm], orientation: "portrait" });
+    pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, widthMm, heightMm);
+    const blob = pdf.output("blob");
+    await shareOrDownload(blob, `comprovante-${data.numero ?? Date.now()}.pdf`, "application/pdf", receiptSummaryText());
+  }
 
   function shareWhats() {
     const lines: string[] = [];
@@ -532,6 +590,7 @@ function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
     const url = `https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`;
     window.open(url, "_blank");
   }
+
 
   const pg = data.pagamento || {};
   return (
@@ -566,8 +625,10 @@ function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
           {pg.recebido ? <div className="flex justify-between"><span>Recebido</span><span>{brl(pg.recebido)}</span></div> : null}
           {pg.troco ? <div className="flex justify-between"><span>Troco</span><span>{brl(pg.troco)}</span></div> : null}
         </div>
-        <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="outline" onClick={shareWhats}>WhatsApp</Button>
+        <DialogFooter className="flex-wrap gap-2 sm:gap-2">
+          <Button variant="outline" onClick={shareWhats}>WhatsApp (texto)</Button>
+          <Button variant="outline" onClick={shareImage}>Enviar imagem</Button>
+          <Button variant="outline" onClick={sharePdf}>Enviar PDF</Button>
           <Button variant="outline" onClick={() => setPreviewOpen(true)}>Visualizar e imprimir</Button>
           <Button onClick={onClose}>Concluir</Button>
         </DialogFooter>
@@ -588,15 +649,18 @@ function ReceiptDialog({ data, onClose }: { data: any; onClose: () => void }) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            Confira margens, fonte e quebras antes de imprimir.
+            Confira margens, fonte e quebras antes de imprimir ou compartilhar.
           </p>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={openPrintWindow}>Abrir em nova janela</Button>
+          <DialogFooter className="flex-wrap gap-2 sm:gap-2">
+            <Button variant="outline" onClick={shareImage}>Compartilhar imagem</Button>
+            <Button variant="outline" onClick={sharePdf}>Compartilhar PDF</Button>
+            <Button variant="outline" onClick={openPrintWindow}>Nova janela</Button>
             <Button variant="outline" onClick={() => setPreviewOpen(false)}>Fechar</Button>
             <Button onClick={printFromPreview}>Imprimir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </Dialog>
   );
 }
