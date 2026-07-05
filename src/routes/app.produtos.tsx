@@ -31,6 +31,8 @@ function ProdutosPage() {
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState<any | null>(null);
+  const [importing, setImporting] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: products = [] } = useQuery({
     queryKey: ["products", auth.company?.id],
