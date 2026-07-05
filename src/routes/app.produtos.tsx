@@ -226,7 +226,19 @@ function ProdutosPage() {
         title="Produtos"
         subtitle={`${filtered.length} de ${products.length} produtos`}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); }}
+            />
+            {auth.isGerente && (
+              <Button variant="outline" disabled={importing} onClick={() => fileRef.current?.click()}>
+                <Upload className="h-4 w-4 mr-1" /> {importing ? "Importando…" : "Importar Excel"}
+              </Button>
+            )}
             {products.length > 0 && (
               <Button variant="outline" onClick={exportToExcel}>
                 <FileSpreadsheet className="h-4 w-4 mr-1" /> Exportar Excel
