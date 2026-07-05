@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, AlertTriangle, PackagePlus, Layers, Snowflake, Flame, FileSpreadsheet } from "lucide-react";
+import { Plus, Search, Edit, Trash2, AlertTriangle, PackagePlus, Layers, Snowflake, Flame, FileSpreadsheet, Upload } from "lucide-react";
+import { useRef } from "react";
 import * as XLSX from "xlsx";
 import { BarcodeInput } from "@/components/barcode-scanner";
 import { ProductImagePicker } from "@/components/product-image-picker";
