@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader, EmptyState } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, AlertTriangle, PackagePlus, Layers, Snowflake, Flame, FileSpreadsheet } from "lucide-react";
+import { Plus, Search, Edit, Trash2, AlertTriangle, PackagePlus, Layers, Snowflake, Flame, FileSpreadsheet, Upload } from "lucide-react";
 import * as XLSX from "xlsx";
 import { BarcodeInput } from "@/components/barcode-scanner";
 import { ProductImagePicker } from "@/components/product-image-picker";
@@ -31,6 +31,8 @@ function ProdutosPage() {
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState<any | null>(null);
+  const [importing, setImporting] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: products = [] } = useQuery({
     queryKey: ["products", auth.company?.id],
@@ -100,13 +102,143 @@ function ProdutosPage() {
     toast.success("Planilha exportada");
   }
 
+  function norm(s: any) {
+    return String(s ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  async function handleImportFile(file: File) {
+    if (!auth.company?.id) return;
+    setImporting(true);
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      if (!rows.length) { toast.error("Planilha vazia"); return; }
+
+      const catMap = new Map((categories as any[]).map((c) => [norm(c.nome), c.id]));
+      const brandMap = new Map((brands as any[]).map((b) => [norm(b.nome), b.id]));
+      const supMap = new Map((suppliers as any[]).map((s) => [norm(s.nome), s.id]));
+      const prodByBarcode = new Map(
+        (products as any[]).filter((p) => p.codigo_barras).map((p) => [String(p.codigo_barras), p.id]),
+      );
+      const prodByName = new Map((products as any[]).map((p) => [norm(p.nome), p.id]));
+
+      const pick = (r: any, ...keys: string[]) => {
+        for (const k of Object.keys(r)) {
+          const nk = norm(k);
+          if (keys.some((kk) => nk === norm(kk))) return r[k];
+        }
+        return "";
+      };
+      const numOr = (v: any, d = 0) => {
+        const n = Number(String(v ?? "").replace(",", "."));
+        return isNaN(n) ? d : n;
+      };
+
+      const newCats: string[] = [];
+      const newBrands: string[] = [];
+      const newSups: string[] = [];
+      for (const r of rows) {
+        const c = String(pick(r, "Categoria") ?? "").trim();
+        if (c && !catMap.has(norm(c)) && !newCats.includes(c)) newCats.push(c);
+        const b = String(pick(r, "Marca") ?? "").trim();
+        if (b && !brandMap.has(norm(b)) && !newBrands.includes(b)) newBrands.push(b);
+        const s = String(pick(r, "Fornecedor") ?? "").trim();
+        if (s && !supMap.has(norm(s)) && !newSups.includes(s)) newSups.push(s);
+      }
+
+      if (newCats.length) {
+        const { data } = await supabase.from("categories")
+          .insert(newCats.map((nome) => ({ company_id: auth.company!.id, nome })))
+          .select("id, nome");
+        for (const c of data ?? []) catMap.set(norm(c.nome), c.id);
+      }
+      if (newBrands.length) {
+        const { data } = await supabase.from("brands")
+          .insert(newBrands.map((nome) => ({ company_id: auth.company!.id, nome })))
+          .select("id, nome");
+        for (const b of data ?? []) brandMap.set(norm(b.nome), b.id);
+      }
+      if (newSups.length) {
+        const { data } = await supabase.from("suppliers")
+          .insert(newSups.map((nome) => ({ company_id: auth.company!.id, nome })))
+          .select("id, nome");
+        for (const s of data ?? []) supMap.set(norm(s.nome), s.id);
+      }
+
+      let created = 0, updated = 0, skipped = 0;
+      const errors: string[] = [];
+      for (const r of rows) {
+        const nome = String(pick(r, "Nome", "Produto") ?? "").trim();
+        if (!nome) { skipped++; continue; }
+        const codigo = String(pick(r, "Código de barras", "Codigo de barras", "Codigo", "EAN") ?? "").trim();
+        const catNome = String(pick(r, "Categoria") ?? "").trim();
+        const brandNome = String(pick(r, "Marca") ?? "").trim();
+        const supNome = String(pick(r, "Fornecedor") ?? "").trim();
+        const ativoRaw = String(pick(r, "Ativo") ?? "").trim().toLowerCase();
+        const validade = String(pick(r, "Validade") ?? "").trim();
+
+        const payload: any = {
+          company_id: auth.company!.id,
+          nome,
+          codigo_barras: codigo || null,
+          category_id: catNome ? catMap.get(norm(catNome)) ?? null : null,
+          brand_id: brandNome ? brandMap.get(norm(brandNome)) ?? null : null,
+          supplier_id: supNome ? supMap.get(norm(supNome)) ?? null : null,
+          unidade: String(pick(r, "Unidade") ?? "un").trim() || "un",
+          tamanho: String(pick(r, "Tamanho") ?? "").trim() || null,
+          volume: String(pick(r, "Volume", "Volume / pack") ?? "").trim() || null,
+          estoque: numOr(pick(r, "Estoque")),
+          estoque_minimo: numOr(pick(r, "Estoque mínimo", "Estoque minimo")),
+          preco_custo: numOr(pick(r, "Preço de custo", "Preco de custo", "Custo")),
+          preco_venda: numOr(pick(r, "Preço de venda", "Preco de venda", "Venda", "Preço")),
+          descricao: String(pick(r, "Descrição", "Descricao") ?? "").trim() || null,
+          validade: /^\d{4}-\d{2}-\d{2}$/.test(validade) ? validade : null,
+          ativo: ativoRaw ? !["nao", "não", "no", "false", "0"].includes(ativoRaw) : true,
+        };
+
+        const existingId = (codigo && prodByBarcode.get(codigo)) || prodByName.get(norm(nome));
+        const res = existingId
+          ? await supabase.from("products").update(payload).eq("id", existingId)
+          : await supabase.from("products").insert(payload);
+        if (res.error) { errors.push(`${nome}: ${res.error.message}`); continue; }
+        if (existingId) updated++; else created++;
+      }
+
+      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["categories"] });
+      qc.invalidateQueries({ queryKey: ["brands"] });
+      qc.invalidateQueries({ queryKey: ["suppliers"] });
+      toast.success(`Importação concluída: ${created} criados, ${updated} atualizados${skipped ? `, ${skipped} ignorados` : ""}`);
+      if (errors.length) toast.error(`${errors.length} erro(s). Primeiro: ${errors[0]}`);
+    } catch (e: any) {
+      toast.error("Falha ao importar: " + (e?.message ?? String(e)));
+    } finally {
+      setImporting(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
   return (
     <PageContainer>
       <PageHeader
         title="Produtos"
         subtitle={`${filtered.length} de ${products.length} produtos`}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); }}
+            />
+            {auth.isGerente && (
+              <Button variant="outline" disabled={importing} onClick={() => fileRef.current?.click()}>
+                <Upload className="h-4 w-4 mr-1" /> {importing ? "Importando…" : "Importar Excel"}
+              </Button>
+            )}
             {products.length > 0 && (
               <Button variant="outline" onClick={exportToExcel}>
                 <FileSpreadsheet className="h-4 w-4 mr-1" /> Exportar Excel
