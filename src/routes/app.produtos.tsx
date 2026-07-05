@@ -76,17 +76,48 @@ function ProdutosPage() {
     qc.invalidateQueries({ queryKey: ["products"] });
   }
 
+  function exportToExcel() {
+    const rows = (filtered.length ? filtered : products).map((p: any) => ({
+      Nome: p.nome,
+      "Código de barras": p.codigo_barras ?? "",
+      Categoria: p.categories?.nome ?? "",
+      Marca: p.brands?.nome ?? "",
+      Unidade: p.unidade,
+      Tamanho: p.tamanho ?? "",
+      Volume: p.volume ?? "",
+      Estoque: Number(p.estoque ?? 0),
+      "Estoque mínimo": Number(p.estoque_minimo ?? 0),
+      "Preço de custo": Number(p.preco_custo ?? 0),
+      "Preço de venda": Number(p.preco_venda ?? 0),
+      Validade: p.validade ?? "",
+      Descrição: p.descricao ?? "",
+      Ativo: p.ativo ? "Sim" : "Não",
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Produtos");
+    XLSX.writeFile(wb, "produtos.xlsx");
+    toast.success("Planilha exportada");
+  }
+
   return (
     <PageContainer>
       <PageHeader
         title="Produtos"
         subtitle={`${filtered.length} de ${products.length} produtos`}
         actions={
-          auth.isGerente && (
-            <Button onClick={() => { setEditing(null); setOpen(true); }}>
-              <Plus className="h-4 w-4 mr-1" /> Novo
-            </Button>
-          )
+          <div className="flex items-center gap-2">
+            {products.length > 0 && (
+              <Button variant="outline" onClick={exportToExcel}>
+                <FileSpreadsheet className="h-4 w-4 mr-1" /> Exportar Excel
+              </Button>
+            )}
+            {auth.isGerente && (
+              <Button onClick={() => { setEditing(null); setOpen(true); }}>
+                <Plus className="h-4 w-4 mr-1" /> Novo
+              </Button>
+            )}
+          </div>
         }
       />
 
