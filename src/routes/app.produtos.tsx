@@ -344,9 +344,21 @@ function ProdutosPage() {
               className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); }}
             />
+            <input
+              ref={xmlRef}
+              type="file"
+              accept=".xml,text/xml,application/xml"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportXml(f); }}
+            />
             {auth.isGerente && (
               <Button variant="outline" disabled={importing} onClick={() => fileRef.current?.click()}>
                 <Upload className="h-4 w-4 mr-1" /> {importing ? "Importando…" : "Importar Excel"}
+              </Button>
+            )}
+            {auth.isGerente && (
+              <Button variant="outline" disabled={importingXml} onClick={() => xmlRef.current?.click()}>
+                <Upload className="h-4 w-4 mr-1" /> {importingXml ? "Lendo XML…" : "Importar XML NF-e"}
               </Button>
             )}
             {products.length > 0 && (
