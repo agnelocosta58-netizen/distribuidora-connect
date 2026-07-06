@@ -219,7 +219,115 @@ function ProdutosPage() {
     } finally {
       setImporting(false);
       if (fileRef.current) fileRef.current.value = "";
+  }
+
+  async function handleImportXml(file: File) {
+    if (!auth.company?.id) return;
+    setImportingXml(true);
+    try {
+      const text = await file.text();
+      const doc = new DOMParser().parseFromString(text, "text/xml");
+      if (doc.getElementsByTagName("parsererror").length) {
+        toast.error("XML inválido");
+        return;
+      }
+      const T = (el: Element | null | undefined, tag: string) =>
+        el?.getElementsByTagName(tag)?.[0]?.textContent?.trim() ?? "";
+
+      // Supplier from <emit>
+      const emit = doc.getElementsByTagName("emit")[0] ?? null;
+      const supNome = T(emit, "xNome") || T(emit, "xFant");
+      const supCnpj = T(emit, "CNPJ");
+      const supMap = new Map((suppliers as any[]).map((s) => [norm(s.nome), s.id]));
+      let supplierId: string | null = supNome ? supMap.get(norm(supNome)) ?? null : null;
+      if (supNome && !supplierId) {
+        const { data } = await supabase.from("suppliers")
+          .insert({ company_id: auth.company!.id, nome: supNome, cnpj: supCnpj || null })
+          .select("id").single();
+        supplierId = data?.id ?? null;
+      }
+
+      const dets = Array.from(doc.getElementsByTagName("det"));
+      if (!dets.length) { toast.error("Nenhum item encontrado no XML"); return; }
+
+      const prodByBarcode = new Map(
+        (products as any[]).filter((p) => p.codigo_barras).map((p) => [String(p.codigo_barras), p]),
+      );
+      const prodByName = new Map((products as any[]).map((p) => [norm(p.nome), p]));
+
+      let created = 0, updated = 0;
+      const errors: string[] = [];
+      for (const det of dets) {
+        const prod = det.getElementsByTagName("prod")[0];
+        if (!prod) continue;
+        const nome = T(prod, "xProd");
+        if (!nome) continue;
+        const eanRaw = T(prod, "cEAN") || T(prod, "cEANTrib");
+        const codigo = eanRaw && eanRaw.toUpperCase() !== "SEM GTIN" ? eanRaw : "";
+        const qCom = Number(T(prod, "qCom")) || 0;
+        const vUnCom = Number(T(prod, "vUnCom")) || 0;
+        const uCom = (T(prod, "uCom") || "un").toLowerCase();
+
+        const existing = (codigo && prodByBarcode.get(codigo)) || prodByName.get(norm(nome));
+        if (existing) {
+          const novoEstoque = Number(existing.estoque ?? 0) + qCom;
+          const upd: any = { estoque: novoEstoque };
+          if (vUnCom > 0) upd.preco_custo = vUnCom;
+          if (supplierId && !existing.supplier_id) upd.supplier_id = supplierId;
+          if (codigo && !existing.codigo_barras) upd.codigo_barras = codigo;
+          const { error } = await supabase.from("products").update(upd).eq("id", existing.id);
+          if (error) { errors.push(`${nome}: ${error.message}`); continue; }
+          if (qCom > 0) {
+            await supabase.from("stock_movements").insert({
+              company_id: auth.company!.id,
+              product_id: existing.id,
+              tipo: "entrada",
+              quantidade: qCom,
+              preco_unitario: vUnCom || null,
+              observacao: `NF-e ${supNome || ""}`.trim(),
+            });
+          }
+          updated++;
+        } else {
+          const payload = {
+            company_id: auth.company!.id,
+            nome,
+            codigo_barras: codigo || null,
+            supplier_id: supplierId,
+            unidade: uCom || "un",
+            estoque: qCom,
+            estoque_minimo: 0,
+            preco_custo: vUnCom,
+            preco_venda: vUnCom,
+            ativo: true,
+          };
+          const { data, error } = await supabase.from("products").insert(payload).select("id").single();
+          if (error) { errors.push(`${nome}: ${error.message}`); continue; }
+          if (data?.id && qCom > 0) {
+            await supabase.from("stock_movements").insert({
+              company_id: auth.company!.id,
+              product_id: data.id,
+              tipo: "entrada",
+              quantidade: qCom,
+              preco_unitario: vUnCom || null,
+              observacao: `NF-e ${supNome || ""}`.trim(),
+            });
+          }
+          created++;
+        }
+      }
+
+      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["suppliers"] });
+      toast.success(`NF-e importada: ${created} criados, ${updated} atualizados`);
+      if (errors.length) toast.error(`${errors.length} erro(s). Primeiro: ${errors[0]}`);
+    } catch (e: any) {
+      toast.error("Falha ao importar XML: " + (e?.message ?? String(e)));
+    } finally {
+      setImportingXml(false);
+      if (xmlRef.current) xmlRef.current.value = "";
     }
+  }
   }
 
   return (
