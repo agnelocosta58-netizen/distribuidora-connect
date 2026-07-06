@@ -219,7 +219,10 @@ function ProdutosPage() {
     } finally {
       setImporting(false);
       if (fileRef.current) fileRef.current.value = "";
+    }
   }
+
+
 
   async function handleImportXml(file: File) {
     if (!auth.company?.id) return;
