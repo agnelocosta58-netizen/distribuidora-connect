@@ -331,7 +331,7 @@ function ProdutosPage() {
       if (xmlRef.current) xmlRef.current.value = "";
     }
   }
-  }
+
 
   return (
     <PageContainer>
