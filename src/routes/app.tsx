@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useAuth, signOut } from "@/lib/auth";
+import { useAuth, signOut, AuthProvider } from "@/lib/auth";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Wallet, Boxes,
   Settings, LogOut, BarChart3, Tags, UserCog, Beer, Receipt,
@@ -14,7 +14,13 @@ import {
   SidebarProvider, SidebarTrigger, useSidebar,
 } from "@/components/ui/sidebar";
 
-export const Route = createFileRoute("/app")({ component: AppLayout });
+export const Route = createFileRoute("/app")({
+  component: () => (
+    <AuthProvider>
+      <AppLayout />
+    </AuthProvider>
+  ),
+});
 
 type NavItem = { to: string; label: string; icon: any; roles?: ("admin" | "gerente" | "vendedor")[] };
 
