@@ -14,7 +14,13 @@ import {
   SidebarProvider, SidebarTrigger, useSidebar,
 } from "@/components/ui/sidebar";
 
-export const Route = createFileRoute("/app")({ component: AppLayout });
+export const Route = createFileRoute("/app")({
+  component: () => (
+    <AuthProvider>
+      <AppLayout />
+    </AuthProvider>
+  ),
+});
 
 type NavItem = { to: string; label: string; icon: any; roles?: ("admin" | "gerente" | "vendedor")[] };
 
