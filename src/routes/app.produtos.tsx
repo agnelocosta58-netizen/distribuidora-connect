@@ -39,11 +39,14 @@ function ProdutosPage() {
   const { data: products = [] } = useQuery({
     queryKey: ["products", auth.company?.id],
     enabled: !!auth.company?.id,
+    staleTime: 30_000,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("products")
         .select("*, categories(nome, cor), brands(nome)")
+        .eq("company_id", auth.company!.id)
         .order("nome");
+      if (error) throw error;
       return data ?? [];
     },
   });
