@@ -27,8 +27,15 @@ function CaixaPage() {
     queryKey: ["caixa-aberto", auth.user?.id],
     enabled: !!auth.user?.id,
     queryFn: async () => {
-      const { data } = await supabase.from("cash_registers").select("*").eq("user_id", auth.user!.id).eq("status", "aberto").maybeSingle();
-      return data;
+      const { data, error } = await supabase
+        .from("cash_registers")
+        .select("*")
+        .eq("user_id", auth.user!.id)
+        .eq("status", "aberto")
+        .order("aberto_em", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      return data?.[0] ?? null;
     },
   });
 
