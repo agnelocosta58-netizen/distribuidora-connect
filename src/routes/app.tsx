@@ -72,7 +72,10 @@ function AppLayout() {
             <SidebarTrigger className="h-10 w-10 shrink-0" />
             <div className="min-w-0 flex-1 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
               <div className="font-semibold truncate text-sm sm:text-base">{auth.company?.nome ?? "Distribuidora"}</div>
-              <div className="hidden sm:block text-xs text-muted-foreground truncate">{auth.profile?.nome}</div>
+              <div className="hidden sm:flex flex-col items-end min-w-0">
+                <div className="text-xs font-medium truncate">{auth.profile?.nome}</div>
+                <div className="text-[11px] text-muted-foreground truncate" title={auth.user?.email ?? ""}>{auth.user?.email}</div>
+              </div>
             </div>
           </header>
           <main className="flex-1 min-w-0">
