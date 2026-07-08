@@ -1,0 +1,13 @@
+
+ALTER TABLE public.companies
+  ADD COLUMN IF NOT EXISTS razao_social TEXT,
+  ADD COLUMN IF NOT EXISTS nome_fantasia TEXT,
+  ADD COLUMN IF NOT EXISTS inscricao_estadual TEXT,
+  ADD COLUMN IF NOT EXISTS inscricao_municipal TEXT,
+  ADD COLUMN IF NOT EXISTS regime_tributario TEXT,
+  ADD COLUMN IF NOT EXISTS numero TEXT,
+  ADD COLUMN IF NOT EXISTS complemento TEXT,
+  ADD COLUMN IF NOT EXISTS bairro TEXT,
+  ADD COLUMN IF NOT EXISTS site TEXT,
+  ADD COLUMN IF NOT EXISTS whatsapp TEXT,
+  ADD COLUMN IF NOT EXISTS responsavel TEXT;

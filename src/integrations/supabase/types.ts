@@ -361,52 +361,85 @@ export type Database = {
       }
       companies: {
         Row: {
+          bairro: string | null
           cep: string | null
           cidade: string | null
           cnpj: string | null
+          complemento: string | null
           cor_primaria: string | null
           created_at: string
           email: string | null
           endereco: string | null
           estado: string | null
           id: string
+          inscricao_estadual: string | null
+          inscricao_municipal: string | null
           logo_url: string | null
           nome: string
+          nome_fantasia: string | null
+          numero: string | null
           pix_chave: string | null
+          razao_social: string | null
+          regime_tributario: string | null
+          responsavel: string | null
+          site: string | null
           telefone: string | null
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
+          bairro?: string | null
           cep?: string | null
           cidade?: string | null
           cnpj?: string | null
+          complemento?: string | null
           cor_primaria?: string | null
           created_at?: string
           email?: string | null
           endereco?: string | null
           estado?: string | null
           id?: string
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
           logo_url?: string | null
           nome: string
+          nome_fantasia?: string | null
+          numero?: string | null
           pix_chave?: string | null
+          razao_social?: string | null
+          regime_tributario?: string | null
+          responsavel?: string | null
+          site?: string | null
           telefone?: string | null
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
+          bairro?: string | null
           cep?: string | null
           cidade?: string | null
           cnpj?: string | null
+          complemento?: string | null
           cor_primaria?: string | null
           created_at?: string
           email?: string | null
           endereco?: string | null
           estado?: string | null
           id?: string
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
           logo_url?: string | null
           nome?: string
+          nome_fantasia?: string | null
+          numero?: string | null
           pix_chave?: string | null
+          razao_social?: string | null
+          regime_tributario?: string | null
+          responsavel?: string | null
+          site?: string | null
           telefone?: string | null
           updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
