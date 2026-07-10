@@ -85,6 +85,34 @@ function ProdutosPage() {
     qc.invalidateQueries({ queryKey: ["products"] });
   }
 
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selected.size === filtered.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map((p: any) => p.id)));
+    }
+  }
+
+  async function removeSelected() {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    if (!confirm(`Excluir ${ids.length} produto(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
+    const { error } = await supabase.from("products").delete().in("id", ids);
+    if (error) return toast.error(error.message);
+    toast.success(`${ids.length} produto(s) removido(s)`);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["products"] });
+  }
+
+
   function exportToExcel() {
     const rows = (filtered.length ? filtered : products).map((p: any) => ({
       Nome: p.nome,
