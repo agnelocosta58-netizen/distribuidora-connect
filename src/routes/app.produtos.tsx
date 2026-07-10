@@ -159,13 +159,13 @@ function ProdutosPage() {
       const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: "" });
       if (!rows.length) { toast.error("Planilha vazia"); return; }
 
-      const catMap = new Map((categories as any[]).map((c) => [norm(c.nome), c.id]));
-      const brandMap = new Map((brands as any[]).map((b) => [norm(b.nome), b.id]));
-      const supMap = new Map((suppliers as any[]).map((s) => [norm(s.nome), s.id]));
+      const catMap = new Map((categories as any[]).map((c) => [norm(c.nome), c.nome]));
+      const brandMap = new Map((brands as any[]).map((b) => [norm(b.nome), b.nome]));
+      const supMap = new Map((suppliers as any[]).map((s) => [norm(s.nome), s.nome]));
       const prodByBarcode = new Map(
-        (products as any[]).filter((p) => p.codigo_barras).map((p) => [String(p.codigo_barras), p.id]),
+        (products as any[]).filter((p) => p.codigo_barras).map((p) => [String(p.codigo_barras), p]),
       );
-      const prodByName = new Map((products as any[]).map((p) => [norm(p.nome), p.id]));
+      const prodByName = new Map((products as any[]).map((p) => [norm(p.nome), p]));
 
       const pick = (r: any, ...keys: string[]) => {
         for (const k of Object.keys(r)) {
@@ -191,27 +191,8 @@ function ProdutosPage() {
         if (s && !supMap.has(norm(s)) && !newSups.includes(s)) newSups.push(s);
       }
 
-      if (newCats.length) {
-        const { data } = await supabase.from("categories")
-          .insert(newCats.map((nome) => ({ company_id: auth.company!.id, nome })))
-          .select("id, nome");
-        for (const c of data ?? []) catMap.set(norm(c.nome), c.id);
-      }
-      if (newBrands.length) {
-        const { data } = await supabase.from("brands")
-          .insert(newBrands.map((nome) => ({ company_id: auth.company!.id, nome })))
-          .select("id, nome");
-        for (const b of data ?? []) brandMap.set(norm(b.nome), b.id);
-      }
-      if (newSups.length) {
-        const { data } = await supabase.from("suppliers")
-          .insert(newSups.map((nome) => ({ company_id: auth.company!.id, nome })))
-          .select("id, nome");
-        for (const s of data ?? []) supMap.set(norm(s.nome), s.id);
-      }
-
-      let created = 0, updated = 0, skipped = 0;
-      const errors: string[] = [];
+      const items: Array<{ action: "create" | "update"; existingId: string | null; payload: any; oldSnapshot?: any }> = [];
+      let skipped = 0;
       for (const r of rows) {
         const nome = String(pick(r, "Nome", "Produto") ?? "").trim();
         if (!nome) { skipped++; continue; }
@@ -223,12 +204,11 @@ function ProdutosPage() {
         const validade = String(pick(r, "Validade") ?? "").trim();
 
         const payload: any = {
-          company_id: auth.company!.id,
           nome,
           codigo_barras: codigo || null,
-          category_id: catNome ? catMap.get(norm(catNome)) ?? null : null,
-          brand_id: brandNome ? brandMap.get(norm(brandNome)) ?? null : null,
-          supplier_id: supNome ? supMap.get(norm(supNome)) ?? null : null,
+          _catNome: catNome || null,
+          _brandNome: brandNome || null,
+          _supNome: supNome || null,
           unidade: String(pick(r, "Unidade") ?? "un").trim() || "un",
           tamanho: String(pick(r, "Tamanho") ?? "").trim() || null,
           volume: String(pick(r, "Volume", "Volume / pack") ?? "").trim() || null,
@@ -241,27 +221,83 @@ function ProdutosPage() {
           ativo: ativoRaw ? !["nao", "não", "no", "false", "0"].includes(ativoRaw) : true,
         };
 
-        const existingId = (codigo && prodByBarcode.get(codigo)) || prodByName.get(norm(nome));
-        const res = existingId
-          ? await supabase.from("products").update(payload).eq("id", existingId)
+        const existing = (codigo && prodByBarcode.get(codigo)) || prodByName.get(norm(nome)) || null;
+        items.push({
+          action: existing ? "update" : "create",
+          existingId: existing?.id ?? null,
+          payload,
+          oldSnapshot: existing ?? undefined,
+        });
+      }
+
+      setImportPreview({ items, newCats, newBrands, newSups, skipped });
+    } catch (e: any) {
+      toast.error("Falha ao ler planilha: " + (e?.message ?? String(e)));
+    } finally {
+      setImporting(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  async function applyImport() {
+    if (!importPreview || !auth.company?.id) return;
+    setApplyingImport(true);
+    try {
+      const catMap = new Map((categories as any[]).map((c) => [norm(c.nome), c.id]));
+      const brandMap = new Map((brands as any[]).map((b) => [norm(b.nome), b.id]));
+      const supMap = new Map((suppliers as any[]).map((s) => [norm(s.nome), s.id]));
+
+      if (importPreview.newCats.length) {
+        const { data } = await supabase.from("categories")
+          .insert(importPreview.newCats.map((nome) => ({ company_id: auth.company!.id, nome })))
+          .select("id, nome");
+        for (const c of data ?? []) catMap.set(norm(c.nome), c.id);
+      }
+      if (importPreview.newBrands.length) {
+        const { data } = await supabase.from("brands")
+          .insert(importPreview.newBrands.map((nome) => ({ company_id: auth.company!.id, nome })))
+          .select("id, nome");
+        for (const b of data ?? []) brandMap.set(norm(b.nome), b.id);
+      }
+      if (importPreview.newSups.length) {
+        const { data } = await supabase.from("suppliers")
+          .insert(importPreview.newSups.map((nome) => ({ company_id: auth.company!.id, nome })))
+          .select("id, nome");
+        for (const s of data ?? []) supMap.set(norm(s.nome), s.id);
+      }
+
+      let created = 0, updated = 0;
+      const errors: string[] = [];
+      for (const it of importPreview.items) {
+        const { _catNome, _brandNome, _supNome, ...rest } = it.payload;
+        const payload: any = {
+          ...rest,
+          company_id: auth.company!.id,
+          category_id: _catNome ? catMap.get(norm(_catNome)) ?? null : null,
+          brand_id: _brandNome ? brandMap.get(norm(_brandNome)) ?? null : null,
+          supplier_id: _supNome ? supMap.get(norm(_supNome)) ?? null : null,
+        };
+        const res = it.existingId
+          ? await supabase.from("products").update(payload).eq("id", it.existingId)
           : await supabase.from("products").insert(payload);
-        if (res.error) { errors.push(`${nome}: ${res.error.message}`); continue; }
-        if (existingId) updated++; else created++;
+        if (res.error) { errors.push(`${payload.nome}: ${res.error.message}`); continue; }
+        if (it.existingId) updated++; else created++;
       }
 
       qc.invalidateQueries({ queryKey: ["products"] });
       qc.invalidateQueries({ queryKey: ["categories"] });
       qc.invalidateQueries({ queryKey: ["brands"] });
       qc.invalidateQueries({ queryKey: ["suppliers"] });
-      toast.success(`Importação concluída: ${created} criados, ${updated} atualizados${skipped ? `, ${skipped} ignorados` : ""}`);
+      toast.success(`Importação concluída: ${created} criados, ${updated} atualizados${importPreview.skipped ? `, ${importPreview.skipped} ignorados` : ""}`);
       if (errors.length) toast.error(`${errors.length} erro(s). Primeiro: ${errors[0]}`);
+      setImportPreview(null);
     } catch (e: any) {
       toast.error("Falha ao importar: " + (e?.message ?? String(e)));
     } finally {
-      setImporting(false);
-      if (fileRef.current) fileRef.current.value = "";
+      setApplyingImport(false);
     }
   }
+
 
 
 
