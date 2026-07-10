@@ -33,6 +33,14 @@ function ProdutosPage() {
   const [moveOpen, setMoveOpen] = useState<any | null>(null);
   const [importing, setImporting] = useState(false);
   const [importingXml, setImportingXml] = useState(false);
+  const [importPreview, setImportPreview] = useState<null | {
+    items: Array<{ action: "create" | "update"; existingId: string | null; payload: any; oldSnapshot?: any }>;
+    newCats: string[];
+    newBrands: string[];
+    newSups: string[];
+    skipped: number;
+  }>(null);
+  const [applyingImport, setApplyingImport] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
   const xmlRef = useRef<HTMLInputElement>(null);
