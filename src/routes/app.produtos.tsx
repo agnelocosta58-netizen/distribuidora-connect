@@ -416,6 +416,29 @@ function ProdutosPage() {
         <Input className="pl-9" placeholder="Buscar por nome ou código de barras" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
+      {auth.isGerente && filtered.length > 0 && (
+        <div className="mb-3 flex items-center justify-between gap-2 flex-wrap">
+          <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-primary cursor-pointer"
+              checked={selected.size > 0 && selected.size === filtered.length}
+              ref={(el) => { if (el) el.indeterminate = selected.size > 0 && selected.size < filtered.length; }}
+              onChange={toggleSelectAll}
+            />
+            {selected.size > 0 ? `${selected.size} selecionado(s)` : "Selecionar todos"}
+          </label>
+          {selected.size > 0 && (
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setSelected(new Set())}>Limpar</Button>
+              <Button size="sm" variant="destructive" onClick={removeSelected}>
+                <Trash2 className="h-4 w-4 mr-1" /> Excluir {selected.size}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         <Card className="shadow-card">
           <EmptyState title="Nenhum produto" description="Cadastre seu primeiro produto para começar." />
@@ -424,9 +447,18 @@ function ProdutosPage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map((p) => {
             const low = Number(p.estoque) <= Number(p.estoque_minimo);
+            const isSelected = selected.has(p.id);
             return (
-              <Card key={p.id} className="p-4 shadow-card">
+              <Card key={p.id} className={`p-4 shadow-card ${isSelected ? "ring-2 ring-primary" : ""}`}>
                 <div className="flex items-start justify-between gap-2">
+                  {auth.isGerente && (
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 accent-primary cursor-pointer"
+                      checked={isSelected}
+                      onChange={() => toggleSelect(p.id)}
+                    />
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="font-semibold truncate">{p.nome}</div>
                     <div className="text-xs text-muted-foreground flex gap-2 mt-0.5 flex-wrap">
@@ -439,6 +471,7 @@ function ProdutosPage() {
                     <div className="text-[11px] text-muted-foreground">custo {brl(p.preco_custo)}</div>
                   </div>
                 </div>
+
                 <div className="mt-3 flex items-center justify-between text-sm">
                   <div className={`flex items-center gap-1 ${low ? "text-destructive" : "text-foreground"}`}>
                     {low && <AlertTriangle className="h-3.5 w-3.5" />}
