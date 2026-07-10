@@ -433,7 +433,7 @@ function ProdutosPage() {
             />
             {auth.isGerente && (
               <Button variant="outline" disabled={importing} onClick={() => fileRef.current?.click()}>
-                <Upload className="h-4 w-4 mr-1" /> {importing ? "Importando…" : "Importar Excel"}
+                <Upload className="h-4 w-4 mr-1" /> {importing ? "Lendo…" : "Importar Excel"}
               </Button>
             )}
             {auth.isGerente && (
