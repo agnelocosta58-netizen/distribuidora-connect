@@ -559,6 +559,91 @@ function ProdutosPage() {
         companyId={auth.company?.id ?? ""}
         onSaved={() => qc.invalidateQueries({ queryKey: ["products"] })}
       />
+
+      <Dialog open={!!importPreview} onOpenChange={(v) => { if (!v && !applyingImport) setImportPreview(null); }}>
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Confirmar importação</DialogTitle>
+          </DialogHeader>
+          {importPreview && (() => {
+            const creates = importPreview.items.filter((i) => i.action === "create").length;
+            const updates = importPreview.items.filter((i) => i.action === "update").length;
+            return (
+              <div className="flex-1 overflow-hidden flex flex-col gap-3">
+                <div className="flex flex-wrap gap-2 text-sm">
+                  <Badge variant="default">Novos: {creates}</Badge>
+                  <Badge variant="secondary">Atualizados: {updates}</Badge>
+                  {importPreview.skipped > 0 && <Badge variant="outline">Ignorados: {importPreview.skipped}</Badge>}
+                  {importPreview.newCats.length > 0 && <Badge variant="outline">Novas categorias: {importPreview.newCats.length}</Badge>}
+                  {importPreview.newBrands.length > 0 && <Badge variant="outline">Novas marcas: {importPreview.newBrands.length}</Badge>}
+                  {importPreview.newSups.length > 0 && <Badge variant="outline">Novos fornecedores: {importPreview.newSups.length}</Badge>}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  A busca é feita primeiro por código de barras; se não encontrar, pelo nome. Produtos existentes serão atualizados; novos serão criados.
+                </p>
+                <div className="flex-1 overflow-auto border rounded-md">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/50 sticky top-0">
+                      <tr className="text-left">
+                        <th className="p-2">Ação</th>
+                        <th className="p-2">Nome</th>
+                        <th className="p-2">Cód. barras</th>
+                        <th className="p-2">Categoria</th>
+                        <th className="p-2 text-right">Custo</th>
+                        <th className="p-2 text-right">Venda</th>
+                        <th className="p-2 text-right">Estoque</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {importPreview.items.map((it, idx) => {
+                        const p = it.payload;
+                        const old = it.oldSnapshot;
+                        const diff = (a: any, b: any) => a !== b && !(a == null && b == null);
+                        return (
+                          <tr key={idx} className="border-t">
+                            <td className="p-2">
+                              <Badge variant={it.action === "create" ? "default" : "secondary"}>
+                                {it.action === "create" ? "Novo" : "Atualizar"}
+                              </Badge>
+                            </td>
+                            <td className="p-2">{p.nome}</td>
+                            <td className="p-2 font-mono">{p.codigo_barras ?? "—"}</td>
+                            <td className="p-2">{p._catNome ?? "—"}</td>
+                            <td className={`p-2 text-right ${old && diff(old.preco_custo, p.preco_custo) ? "text-primary font-medium" : ""}`}>
+                              {brl(p.preco_custo)}
+                              {old && diff(old.preco_custo, p.preco_custo) && (
+                                <div className="text-[10px] text-muted-foreground line-through">{brl(old.preco_custo)}</div>
+                              )}
+                            </td>
+                            <td className={`p-2 text-right ${old && diff(old.preco_venda, p.preco_venda) ? "text-primary font-medium" : ""}`}>
+                              {brl(p.preco_venda)}
+                              {old && diff(old.preco_venda, p.preco_venda) && (
+                                <div className="text-[10px] text-muted-foreground line-through">{brl(old.preco_venda)}</div>
+                              )}
+                            </td>
+                            <td className={`p-2 text-right ${old && diff(old.estoque, p.estoque) ? "text-primary font-medium" : ""}`}>
+                              {num(p.estoque, 3)}
+                              {old && diff(old.estoque, p.estoque) && (
+                                <div className="text-[10px] text-muted-foreground line-through">{num(old.estoque, 3)}</div>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setImportPreview(null)} disabled={applyingImport}>Cancelar</Button>
+                  <Button onClick={applyImport} disabled={applyingImport || importPreview.items.length === 0}>
+                    {applyingImport ? "Importando…" : `Confirmar (${importPreview.items.length})`}
+                  </Button>
+                </DialogFooter>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 }
